@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku Fun - Pause & Total Counter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          boxShadow: {
+            'outset': '5px 5px 10px #bebebe, -5px -5px 10px #ffffff',
+            'inset': 'inset 2px 2px 5px #bebebe, inset -2px -2px 5px #ffffff',
+            'outset-sm': '2px 2px 5px #bebebe, -2px -2px 5px #ffffff',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .border-b-thick { border-bottom: 2px solid #64748b !important; }
+    .border-l-thick { border-left: 2px solid #64748b !important; }
+    
+    .cell-tile { transition: all 0.1s ease-out; }
+    .cell-tile:active { transform: scale(0.97) translateY(1px); }
+    
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-2px); }
+      75% { transform: translateX(2px); }
+    }
+    .error-animate { animation: errorShake 0.3s ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-between p-4 select-none">
+
+  <!-- כותרת, טיימר ובוחר רמות קושי -->
+  <header class="w-full max-w-sm text-center my-1 flex flex-col items-center gap-2">
+    <div class="w-full flex items-center justify-between px-1">
+      <h1 class="text-2xl font-extrabold text-indigo-600 tracking-tight">סודוקו <span class="text-indigo-400 font-light">כיף</span></h1>
+      
+      <!-- תצוגת טיימר -->
+      <div class="bg-slate-200 px-3 py-1 rounded-xl shadow-inset flex items-center gap-1.5 font-mono text-sm font-bold text-slate-700">
+        <span>⏱️</span>
+        <span id="timer-display">00:00</span>
+      </div>
+    </div>
+    
+    <!-- בחירת רמת קושי -->
+    <div class="flex bg-slate-200 p-1 rounded-xl w-full justify-between gap-1 shadow-inset">
+      <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קל</button>
+      <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">בינוני</button>
+      <button onclick="setDifficulty('hard')" id="btn-hard" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קשה</button>
+    </div>
+  </header>
+
+  <!-- אזור המשחק -->
+  <main class="w-full max-w-sm flex flex-col items-center gap-3 my-auto">
+    
+    <!-- לוח הסודוקו -->
+    <div id="board-container" class="relative w-full aspect-square">
+      <div id="board" class="grid grid-cols-9 gap-0 p-1.5 bg-slate-100 shadow-outset rounded-2xl w-full h-full overflow-hidden transition-all duration-200">
+        <!-- הוזן מ-JS -->
+      </div>
+      
+      <!-- שכבת כיסוי להתחלת משחק -->
+      <div id="start-overlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center p-6 text-center z-10">
+        <div class="bg-white/95 p-5 rounded-2xl shadow-xl flex flex-col items-center gap-2">
+          <span class="text-3xl">🎯</span>
+          <h3 class="font-bold text-slate-800 text-base">ברוכים הבאים לסודוקו כיף!</h3>
+          <p class="text-xs text-slate-500">בחר רמת קושי למעלה כדי להתחיל את המשחק</p>
+        </div>
+      </div>
+
+      <!-- שכבת כיסוי להשהיה (Pause) -->
+      <div id="pause-overlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md rounded-2xl hidden flex flex-col items-center justify-center p-6 text-center z-20">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3 animate-fade-in">
+          <span class="text-4xl">⏸️</span>
+          <h3 class="font-bold text-slate-800 text-lg">המשחק מושהה</h3>
+          <button onclick="togglePause()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg active:scale-95 transition-all text-sm">
+            ▶️ המשך משחק
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- מקלדת וכפתורים -->
+    <div class="w-full flex flex-col gap-2 mt-1">
+      
+      <!-- כפתורי פעולות -->
+      <div class="grid grid-cols-4 gap-1.5">
+        <button onclick="createNewGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
+          <span>🔄</span> חדש
+        </button>
+        <button onclick="togglePause()" id="pause-btn" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
+          <span>⏸️</span> השהה
+        </button>
+        <button onclick="checkErrors()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
+          <span>🔍</span> בדיקה
+        </button>
+        <button onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
+          <span>🗑️</span> מחק
+        </button>
+      </div>
+
+      <!-- מקלדת חכמה 5x2 (כולל אריח 10 לסך הכל) -->
+      <div id="keyboard" class="w-full grid grid-cols-5 gap-2">
+        <!-- הוזן מ-JS -->
+      </div>
+      
+      <!-- כפתור בדיקות מהיר -->
+      <button onclick="autoSolve()" class="w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-1">
+        ⚡ פתור אוטומטית (לבדיקה בלבד)
+      </button>
+    </div>
+
+  </main>
+
+  <!-- חלון פופ-אפ לניצחון -->
+  <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-4">
+      <div class="text-5xl">🏆</div>
+      <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
+      <p class="text-sm text-slate-600">פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">00:00</span>!</p>
+      <button onclick="closeWinModal(); createNewGame();" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all">
+        משחק חדש
+      </button>
+    </div>
+  </div>
+
+  <footer class="text-xs text-slate-400 my-1 text-center">
+    סודוקו כיף - גרסה עם השהייה וסך הכל מונה
+  </footer>
+
+  <script>
+    // --- מחולל סודוקו ---
+
+    function isSafe(board, row, col, num) {
+      for (let x = 0; x < 9; x++) {
+        if (board[row][x] === num || board[x][col] === num) return false;
+      }
+      let startRow = row - row % 3, startCol = col - col % 3;
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (board[i + startRow][j + startCol] === num) return false;
+        }
+      }
+      return true;
+    }
+
+    function solveSudoku(board) {
+      for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+          if (board[row][col] === 0) {
+            let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+            for (let num of nums) {
+              if (isSafe(board, row, col, num)) {
+                board[row][col] = num;
+                if (solveSudoku(board)) return true;
+                board[row][col] = 0;
+              }
+            }
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function generateSudoku(difficulty) {
+      let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
+      for (let i = 0; i < 9; i += 3) {
+        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        let idx = 0;
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) {
+            fullBoard[i + r][i + c] = nums[idx++];
+          }
+        }
+      }
+      solveSudoku(fullBoard);
+      let puzzle = JSON.parse(JSON.stringify(fullBoard));
+
+      let removeCount = 43; // קל
+      if (difficulty === 'medium') removeCount = 51; 
+      if (difficulty === 'hard') removeCount = 57; 
+
+      while (removeCount > 0) {
+        let r = Math.floor(Math.random() * 9);
+        let c = Math.floor(Math.random() * 9);
+        if (puzzle[r][c] !== 0) {
+          puzzle[r][c] = 0;
+          removeCount--;
+        }
+      }
+      return { puzzle, solution: fullBoard };
+    }
+
+    // --- מערכת סאונד ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playClickSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playFanfareSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const notes = [
+        { freq: 523.25, time: 0, duration: 0.12 },
+        { freq: 659.25, time: 0.12, duration: 0.12 },
+        { freq: 783.99, time: 0.24, duration: 0.12 },
+        { freq: 1046.50, time: 0.36, duration: 0.6 }
+      ];
+      notes.forEach(note => {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(note.freq, audioCtx.currentTime + note.time);
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime + note.time);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.time + note.duration);
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + note.time);
+        osc.stop(audioCtx.currentTime + note.time + note.duration);
+      });
+    }
+
+    // --- טיימר והשהייה ---
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let isPaused = false;
+
+    function startTimer() {
+      stopTimer();
+      secondsElapsed = 0;
+      isPaused = false;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        if (!isPaused) {
+          secondsElapsed++;
+          updateTimerDisplay();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+      const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+      document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+    }
+
+    function togglePause() {
+      if (!currentDifficulty) return;
+      playClickSound();
+      isPaused = !isPaused;
+
+      const pauseOverlay = document.getElementById('pause-overlay');
+      const pauseBtn = document.getElementById('pause-btn');
+
+      if (isPaused) {
+        pauseOverlay.classList.remove('hidden');
+        pauseBtn.innerHTML = `<span>▶️</span> המשך`;
+      } else {
+        pauseOverlay.classList.add('hidden');
+        pauseBtn.innerHTML = `<span>⏸️</span> השהה`;
+      }
+    }
+
+    // --- מצב המשחק ---
+
+    let currentDifficulty = null; 
+    let initialPuzzle = [];
+    let solution = [];
+    let currentBoard = [];
+    let selectedCell = null; 
+    let errorCells = []; 
+
+    function setDifficulty(diff) {
+      playClickSound();
+      currentDifficulty = diff;
+      updateDifficultyUI();
+      document.getElementById('start-overlay').classList.add('hidden');
+      document.getElementById('pause-overlay').classList.add('hidden');
+      createNewGame();
+    }
+
+    function updateDifficultyUI() {
+      ['easy', 'medium', 'hard'].forEach(d => {
+        const btn = document.getElementById(`btn-${d}`);
+        if (d === currentDifficulty) {
+          btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition-all";
+        } else {
+          btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all";
+        }
+      });
+    }
+
+    function createNewGame() {
+      if (!currentDifficulty) currentDifficulty = 'easy';
+      updateDifficultyUI();
+      document.getElementById('start-overlay').classList.add('hidden');
+      document.getElementById('pause-overlay').classList.add('hidden');
+
+      const generated = generateSudoku(currentDifficulty);
+      initialPuzzle = generated.puzzle;
+      solution = generated.solution;
+      currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
+      selectedCell = null;
+      errorCells = [];
+      startTimer();
+      renderUI();
+    }
+
+    function autoSolve() {
+      if (!solution || solution.length === 0) return;
+      playClickSound();
+      currentBoard = JSON.parse(JSON.stringify(solution));
+      selectedCell = null;
+      errorCells = [];
+      renderUI();
+      setTimeout(handleWin, 150);
+    }
+
+    function getNumberCounts() {
+      const counts = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 };
+      let totalFilled = 0;
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const val = currentBoard[r][c];
+          if (val >= 1 && val <= 9) {
+            counts[val]++;
+            totalFilled++;
+          }
+        }
+      }
+      return { counts, totalRemaining: 81 - totalFilled };
+    }
+
+    function checkWinCondition() {
+      if (!solution || solution.length === 0) return false;
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (currentBoard[r][c] === 0 || currentBoard[r][c] !== solution[r][c]) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function handleWin() {
+      stopTimer();
+      playFanfareSound();
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      }
+      document.getElementById('win-time').innerText = document.getElementById('timer-display').innerText;
+      document.getElementById('win-modal').classList.remove('hidden');
+    }
+
+    function closeWinModal() {
+      document.getElementById('win-modal').classList.add('hidden');
+    }
+
+    const boardElement = document.getElementById('board');
+    const keyboardElement = document.getElementById('keyboard');
+
+    function renderUI() {
+      renderBoard();
+      renderKeyboard();
+    }
+
+    function renderBoard() {
+      boardElement.innerHTML = '';
+      const displayPuzzle = initialPuzzle.length ? initialPuzzle : Array.from({length:9}, ()=>Array(9).fill(0));
+      const displayBoard = currentBoard.length ? currentBoard : Array.from({length:9}, ()=>Array(9).fill(0));
+
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cell = document.createElement('div');
+          let classes = [
+            'cell-tile', 'flex', 'items-center', 'justify-center', 'text-xl', 'cursor-pointer',
+            'm-0.5', 'rounded-md', 'aspect-square', 'relative'
+          ];
+
+          if (r === 2 || r === 5) classes.push('border-b-thick');
+          if (c === 2 || c === 5) classes.push('border-l-thick');
+
+          const isFixed = displayPuzzle[r][c] !== 0;
+          const val = displayBoard[r][c];
+
+          const isSelected = selectedCell && selectedCell.row === r && selectedCell.col === c;
+          const isRelated = selectedCell && (selectedCell.row === r || selectedCell.col === c || (Math.floor(selectedCell.row / 3) === Math.floor(r / 3) && Math.floor(selectedCell.col / 3) === Math.floor(c / 3)));
+          const isSameValue = selectedCell && val !== 0 && displayBoard[selectedCell.row][selectedCell.col] === val;
+          const isError = errorCells.some(e => e.row === r && e.col === c);
+
+          if (isError && isSelected) {
+            classes.push('bg-rose-500', 'text-white', 'font-bold', 'ring-2', 'ring-rose-700', 'error-animate');
+          } else if (isError) {
+            classes.push('bg-rose-100', 'text-rose-700', 'shadow-outset-sm', 'border-2', 'border-rose-400', 'error-animate');
+          } else if (isSelected) {
+            classes.push('bg-indigo-600', 'text-white', 'font-bold', 'shadow-inset');
+          } else if (isSameValue) {
+            classes.push('bg-indigo-100', 'text-indigo-900', 'font-bold', 'shadow-outset-sm');
+          } else if (isRelated) {
+            classes.push('bg-slate-50', 'shadow-inset');
+          } else {
+            classes.push('bg-white', 'shadow-outset-sm');
+          }
+
+          if (!isSelected && !isError) {
+            if (isFixed) classes.push('font-extrabold', 'text-slate-900');
+            else if (val !== 0) classes.push('font-semibold', 'text-indigo-600');
+          }
+
+          cell.className = classes.join(' ');
+          cell.innerText = val !== 0 ? val : '';
+          cell.onclick = () => { 
+            if (currentDifficulty && !isPaused) {
+              playClickSound(); 
+              selectCell(r, c); 
+            }
+          };
+
+          boardElement.appendChild(cell);
+        }
+      }
+    }
+
+    function renderKeyboard() {
+      keyboardElement.innerHTML = '';
+      const { counts, totalRemaining } = getNumberCounts();
+
+      // מקשים 1-9
+      for (let i = 1; i <= 9; i++) {
+        const remaining = 9 - counts[i];
+        const isCompleted = remaining <= 0;
+
+        const btn = document.createElement('button');
+        btn.onclick = () => { 
+          if (currentDifficulty && !isCompleted && !isPaused) {
+            playClickSound(); 
+            handleInput(i); 
+          }
+        };
+
+        let btnClasses = "relative flex items-center justify-center font-bold text-2xl py-3 rounded-xl transition-all duration-100 overflow-hidden ";
+        
+        if (!currentDifficulty || isCompleted || isPaused) {
+          btnClasses += "bg-slate-200 text-slate-400 opacity-50 cursor-not-allowed shadow-none";
+        } else {
+          btnClasses += "bg-white hover:bg-indigo-50 text-indigo-600 shadow-outset-sm active:shadow-inset active:scale-95";
+        }
+
+        btn.className = btnClasses;
+        
+        const badgeBg = isCompleted ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-white';
+        const badgeContent = isCompleted ? '✓' : remaining;
+
+        btn.innerHTML = `
+          <span>${i}</span>
+          <span class="absolute top-1 right-1 ${badgeBg} font-bold text-[9px] min-w-[16px] h-[16px] px-1 rounded-md flex items-center justify-center shadow-sm">
+            ${badgeContent}
+          </span>
+        `;
+
+        keyboardElement.appendChild(btn);
+      }
+
+      // מקש עשירי: סך הכל נותר
+      const totalTile = document.createElement('div');
+      totalTile.className = "relative flex flex-col items-center justify-center bg-slate-800 text-white font-bold rounded-xl shadow-outset-sm p-1 text-center select-none opacity-90";
+      totalTile.innerHTML = `
+        <span class="text-[9px] font-normal text-slate-300 leading-tight">נותרו</span>
+        <span class="text-lg font-black leading-none text-indigo-300">${currentDifficulty ? totalRemaining : '--'}</span>
+      `;
+      keyboardElement.appendChild(totalTile);
+    }
+
+    function selectCell(row, col) {
+      selectedCell = { row, col };
+      errorCells = []; 
+      renderUI();
+    }
+
+    function handleInput(num) {
+      if (!selectedCell || isPaused) return;
+      if (initialPuzzle[selectedCell.row][selectedCell.col] !== 0) return;
+      
+      currentBoard[selectedCell.row][selectedCell.col] = num;
+      errorCells = [];
+      renderUI();
+
+      if (checkWinCondition()) {
+        setTimeout(handleWin, 150);
+      }
+    }
+
+    function handleErase() {
+      if (isPaused) return;
+      playClickSound();
+      if (!selectedCell) return;
+      if (initialPuzzle[selectedCell.row][selectedCell.col] !== 0) return;
+      currentBoard[selectedCell.row][selectedCell.col] = 0;
+      errorCells = [];
+      renderUI();
+    }
+
+    function checkErrors() {
+      if (isPaused) return;
+      playClickSound();
+      errorCells = [];
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (initialPuzzle[r][c] === 0 && currentBoard[r][c] !== 0) {
+            if (currentBoard[r][c] !== solution[r][c]) {
+              errorCells.push({ row: r, col: c });
+            }
+          }
+        }
+      }
+      selectedCell = null;
+      renderUI();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!selectedCell || !currentDifficulty || isPaused) return;
+      if (e.key >= '1' && e.key <= '9') {
+        const num = parseInt(e.key);
+        const { counts } = getNumberCounts();
+        if (counts[num] < 9) {
+          playClickSound();
+          handleInput(num);
+        }
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        handleErase();
+      }
+    });
+
+    renderUI();
+  </script>
+</body>
+</html>
