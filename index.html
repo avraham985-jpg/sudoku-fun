@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Pencil Mode & Auto-Cleanup</title>
+  <title>Sudoku Fun - Game Hub & Full Game</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -36,99 +36,200 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-between p-4 select-none">
 
-  <!-- כותרת, טיימר, רמות קושי ותצוגת שיא -->
-  <header class="w-full max-w-sm text-center my-1 flex flex-col items-center gap-2">
-    <div class="w-full flex items-center justify-between px-1">
-      <h1 class="text-2xl font-extrabold text-indigo-600 tracking-tight">סודוקו <span class="text-indigo-400 font-light">כיף</span></h1>
-      
-      <!-- תצוגת טיימר -->
-      <div class="bg-slate-200 px-3 py-1 rounded-xl shadow-inset flex items-center gap-1.5 font-mono text-sm font-bold text-slate-700">
-        <span>⏱️</span>
-        <span id="timer-display">00:00</span>
-      </div>
-    </div>
+  <!-- ========================================== -->
+  <!-- 1. מסך הבית (HOME VIEW)                    -->
+  <!-- ========================================== -->
+  <div id="home-view" class="w-full max-w-sm flex flex-col gap-4 my-auto">
     
-    <!-- בחירת רמת קושי -->
-    <div class="flex bg-slate-200 p-1 rounded-xl w-full justify-between gap-1 shadow-inset">
-      <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קל</button>
-      <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">בינוני</button>
-      <button onclick="setDifficulty('hard')" id="btn-hard" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קשה</button>
-    </div>
-
-    <!-- תצוגת שיא אישי ותאריך -->
-    <div id="best-time-bar" class="w-full text-center bg-indigo-50/70 py-1 px-2 rounded-lg border border-indigo-100 text-[11px] font-medium text-indigo-800 flex items-center justify-center gap-1">
-      <span>🏆</span>
-      <span id="best-time-text">שיא אישי: טרם נקבע</span>
-    </div>
-  </header>
-
-  <!-- אזור המשחק -->
-  <main class="w-full max-w-sm flex flex-col items-center gap-3 my-auto">
-    
-    <!-- לוח הסודוקו -->
-    <div id="board-container" class="relative w-full aspect-square">
-      <div id="board" class="grid grid-cols-9 gap-0 p-1.5 bg-slate-100 shadow-outset rounded-2xl w-full h-full overflow-hidden transition-all duration-200">
-        <!-- הוזן מ-JS -->
-      </div>
+    <!-- כותרת וסטטוס שחקן -->
+    <header class="text-center flex flex-col items-center gap-2">
+      <h1 class="text-3xl font-black text-indigo-600 tracking-tight">סודוקו <span class="text-indigo-400 font-light">כיף</span></h1>
       
-      <!-- שכבת כיסוי להתחלת משחק -->
-      <div id="start-overlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center p-6 text-center z-10">
-        <div class="bg-white/95 p-5 rounded-2xl shadow-xl flex flex-col items-center gap-2">
-          <span class="text-3xl">🎯</span>
-          <h3 class="font-bold text-slate-800 text-base">ברוכים הבאים לסודוקו כיף!</h3>
-          <p class="text-xs text-slate-500">בחר רמת קושי למעלה כדי להתחיל את המשחק</p>
+      <!-- תצוגת הישגים וסדרות -->
+      <div class="w-full bg-white p-3 rounded-2xl shadow-outset-sm flex items-center justify-around text-xs font-bold text-slate-700">
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">🔥</span>
+          <span id="streak-display">רצף: 1 ימים</span>
+        </div>
+        <div class="h-4 w-[1px] bg-slate-200"></div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">⭐</span>
+          <span id="stars-display">כוכבים: 0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- גריד מצבי משחק -->
+    <main class="flex flex-col gap-3">
+      
+      <!-- כרטיס סודוקו קלאסי -->
+      <div class="bg-white p-4 rounded-2xl shadow-outset flex flex-col gap-3 border border-slate-100">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">🧩</span>
+            <div>
+              <h2 class="font-extrabold text-slate-800 text-base">סודוקו קלאסי</h2>
+              <p class="text-[11px] text-slate-500">משחק חופשי ללא לחץ</p>
+            </div>
+          </div>
+          <span class="bg-indigo-50 text-indigo-600 font-bold text-[10px] px-2 py-1 rounded-md">4 רמות</span>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-1.5 mt-1">
+          <button onclick="startClassicGame('easy')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-2 rounded-xl text-xs transition-all active:scale-95">קל</button>
+          <button onclick="startClassicGame('medium')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-2 rounded-xl text-xs transition-all active:scale-95">בינוני</button>
+          <button onclick="startClassicGame('hard')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-2 rounded-xl text-xs transition-all active:scale-95">קשה</button>
         </div>
       </div>
 
-      <!-- שכבת כיסוי להשהיה (Pause) -->
-      <div id="pause-overlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md rounded-2xl hidden flex flex-col items-center justify-center p-6 text-center z-20">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3 animate-fade-in">
-          <span class="text-4xl">⏸️</span>
-          <h3 class="font-bold text-slate-800 text-lg">המשחק מושהה</h3>
-          <button onclick="togglePause()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg active:scale-95 transition-all text-sm">
-            ▶️ המשך משחק
+      <!-- כרטיס האתגר היומי -->
+      <div onclick="startDailyChallenge()" class="bg-gradient-to-l from-indigo-600 to-indigo-700 text-white p-4 rounded-2xl shadow-outset flex items-center justify-between cursor-pointer active:scale-98 transition-all">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">📅</span>
+          <div>
+            <h2 class="font-extrabold text-base">האתגר היומי</h2>
+            <p id="daily-date-text" class="text-[11px] text-indigo-200">חידה ייחודית להיום</p>
+          </div>
+        </div>
+        <button class="bg-white text-indigo-600 font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-md">שחק</button>
+      </div>
+
+      <!-- כרטיס מסע השלבים -->
+      <div onclick="startJourneyMode()" class="bg-white p-4 rounded-2xl shadow-outset flex items-center justify-between cursor-pointer active:scale-98 transition-all border border-slate-100">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🗺️</span>
+          <div>
+            <h2 class="font-extrabold text-slate-800 text-base">מסע השלבים</h2>
+            <p id="journey-level-text" class="text-[11px] text-slate-500">שלב 1 • 0/100 כוכבים</p>
+          </div>
+        </div>
+        <span class="text-indigo-600 font-bold text-lg">←</span>
+      </div>
+
+      <!-- כרטיס מצב תחרותי -->
+      <div onclick="startCompetitiveMode()" class="bg-white p-4 rounded-2xl shadow-outset flex items-center justify-between cursor-pointer active:scale-98 transition-all border border-slate-100">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">⚡</span>
+          <div>
+            <h2 class="font-extrabold text-slate-800 text-base">נגד השעון</h2>
+            <p class="text-[11px] text-slate-500">3 דקות לפתור • טעויות מורידות זמן</p>
+          </div>
+        </div>
+        <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-md">מהיר</span>
+      </div>
+
+    </main>
+
+    <footer class="text-xs text-slate-400 text-center mt-2">
+      סודוקו כיף • כל הזכויות שמורות
+    </footer>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 2. מסך המשחק (GAME VIEW)                   -->
+  <!-- ========================================== -->
+  <div id="game-view" class="w-full max-w-sm hidden flex-col items-center justify-between my-auto gap-2">
+    
+    <!-- כותרת, חזרה לבית, טיימר ובוחר רמות קושי -->
+    <header class="w-full text-center flex flex-col items-center gap-2">
+      <div class="w-full flex items-center justify-between px-1">
+        <button onclick="switchToHome()" class="bg-white text-indigo-600 font-bold px-3 py-1 rounded-xl shadow-outset-sm active:scale-95 transition-all text-xs flex items-center gap-1">
+          <span>🏠</span> <span>בית</span>
+        </button>
+        
+        <h1 id="game-title-display" class="text-xl font-extrabold text-indigo-600 tracking-tight">סודוקו קלאסי</h1>
+        
+        <!-- תצוגת טיימר -->
+        <div class="bg-slate-200 px-3 py-1 rounded-xl shadow-inset flex items-center gap-1.5 font-mono text-sm font-bold text-slate-700">
+          <span>⏱️</span>
+          <span id="timer-display">00:00</span>
+        </div>
+      </div>
+      
+      <!-- בחירת רמת קושי -->
+      <div id="difficulty-selector-bar" class="flex bg-slate-200 p-1 rounded-xl w-full justify-between gap-1 shadow-inset">
+        <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קל</button>
+        <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">בינוני</button>
+        <button onclick="setDifficulty('hard')" id="btn-hard" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קשה</button>
+      </div>
+
+      <!-- תצוגת שיא אישי ותאריך -->
+      <div id="best-time-bar" class="w-full text-center bg-indigo-50/70 py-1 px-2 rounded-lg border border-indigo-100 text-[11px] font-medium text-indigo-800 flex items-center justify-center gap-1">
+        <span>🏆</span>
+        <span id="best-time-text">שיא אישי: טרם נקבע</span>
+      </div>
+    </header>
+
+    <!-- אזור הלוח והשכבות -->
+    <main class="w-full flex flex-col items-center gap-3">
+      
+      <div id="board-container" class="relative w-full aspect-square">
+        <div id="board" class="grid grid-cols-9 gap-0 p-1.5 bg-slate-100 shadow-outset rounded-2xl w-full h-full overflow-hidden transition-all duration-200">
+          <!-- הוזן מ-JS -->
+        </div>
+        
+        <!-- שכבת כיסוי להתחלת משחק -->
+        <div id="start-overlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center p-6 text-center z-10">
+          <div class="bg-white/95 p-5 rounded-2xl shadow-xl flex flex-col items-center gap-2">
+            <span class="text-3xl">🎯</span>
+            <h3 class="font-bold text-slate-800 text-base">מוכן למשחק?</h3>
+            <p class="text-xs text-slate-500">בחר רמת קושי למעלה כדי להתחיל</p>
+          </div>
+        </div>
+
+        <!-- שכבת כיסוי להשהיה (Pause) -->
+        <div id="pause-overlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md rounded-2xl hidden flex flex-col items-center justify-center p-6 text-center z-20">
+          <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3 animate-fade-in">
+            <span class="text-4xl">⏸️</span>
+            <h3 class="font-bold text-slate-800 text-lg">המשחק מושהה</h3>
+            <button onclick="togglePause()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg active:scale-95 transition-all text-sm">
+              ▶️ המשך משחק
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- מקלדת וכפתורים -->
+      <div class="w-full flex flex-col gap-2 mt-1">
+        
+        <!-- כפתורי פעולות -->
+        <div class="grid grid-cols-5 gap-1">
+          <button onclick="createNewGame()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+            <span>🔄</span> <span>חדש</span>
+          </button>
+          <button onclick="togglePause()" id="pause-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+            <span>⏸️</span> <span>השהה</span>
+          </button>
+          <button onclick="togglePencilMode()" id="pencil-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+            <span>✏️</span> <span>הערות</span>
+          </button>
+          <button onclick="checkErrors()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+            <span>🔍</span> <span>בדיקה</span>
+          </button>
+          <button onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+            <span>🗑️</span> <span>מחק</span>
           </button>
         </div>
-      </div>
-    </div>
 
-    <!-- מקלדת וכפתורים -->
-    <div class="w-full flex flex-col gap-2 mt-1">
-      
-      <!-- כפתורי פעולות (5 כפתורים בשורה) -->
-      <div class="grid grid-cols-5 gap-1">
-        <button onclick="createNewGame()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
-          <span>🔄</span> <span>חדש</span>
-        </button>
-        <button onclick="togglePause()" id="pause-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
-          <span>⏸️</span> <span>השהה</span>
-        </button>
-        <!-- כפתור מצב עיפרון -->
-        <button onclick="togglePencilMode()" id="pencil-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
-          <span>✏️</span> <span>הערות</span>
-        </button>
-        <button onclick="checkErrors()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
-          <span>🔍</span> <span>בדיקה</span>
-        </button>
-        <button onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
-          <span>🗑️</span> <span>מחק</span>
+        <!-- מקלדת חכמה 5x2 -->
+        <div id="keyboard" class="w-full grid grid-cols-5 gap-2">
+          <!-- הוזן מ-JS -->
+        </div>
+        
+        <!-- כפתור בדיקות מהיר -->
+        <button onclick="autoSolve()" class="w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-0.5">
+          ⚡ פתור אוטומטית (לבדיקה בלבד)
         </button>
       </div>
 
-      <!-- מקלדת חכמה 5x2 -->
-      <div id="keyboard" class="w-full grid grid-cols-5 gap-2">
-        <!-- הוזן מ-JS -->
-      </div>
-      
-      <!-- כפתור בדיקות מהיר -->
-      <button onclick="autoSolve()" class="w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-0.5">
-        ⚡ פתור אוטומטית (לבדיקה בלבד)
-      </button>
-    </div>
+    </main>
+  </div>
 
-  </main>
 
-  <!-- חלון פופ-אפ לניצחון -->
+  <!-- ========================================== -->
+  <!-- 3. חלון פופ-אפ לניצחון (MODAL)             -->
+  <!-- ========================================== -->
   <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3">
       <div class="text-5xl">🏆</div>
@@ -139,17 +240,72 @@
         🎉 שיא חדש נקבע היום!
       </div>
 
-      <button onclick="closeWinModal(); createNewGame();" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
-        משחק חדש
+      <button onclick="closeWinModal(); switchToHome();" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
+        חזרה למסך הבית
       </button>
     </div>
   </div>
 
-  <footer class="text-xs text-slate-400 my-1 text-center">
-    סודוקו כיף - מצב עיפרון וניקוי אוטומטי
-  </footer>
 
+  <!-- ========================================== -->
+  <!-- 4. L O G I C & S C R I P T S               -->
+  <!-- ========================================== -->
   <script>
+    // --- ניהול תצוגות (Navigation SPA) ---
+    function switchToGame() {
+      document.getElementById('home-view').classList.add('hidden');
+      document.getElementById('game-view').classList.remove('hidden');
+      document.getElementById('game-view').classList.add('flex');
+    }
+
+    function switchToHome() {
+      stopTimer();
+      saveGameState();
+      document.getElementById('game-view').classList.add('hidden');
+      document.getElementById('game-view').classList.remove('flex');
+      document.getElementById('home-view').classList.remove('hidden');
+      updateHomeStats();
+    }
+
+    function updateHomeStats() {
+      const today = new Date().toLocaleDateString('he-IL');
+      document.getElementById('daily-date-text').innerText = `חידה ייחודית ל-${today}`;
+      
+      // טעינת רצף וכוכבים במידה וקיימים
+      const streak = localStorage.getItem('sudoku_streak') || 1;
+      const stars = localStorage.getItem('sudoku_stars') || 0;
+      document.getElementById('streak-display').innerText = `רצף: ${streak} ימים`;
+      document.getElementById('stars-display').innerText = `כוכבים: ${stars}`;
+    }
+
+    function startClassicGame(diff) {
+      document.getElementById('game-title-display').innerText = "סודוקו קלאסי";
+      document.getElementById('difficulty-selector-bar').classList.remove('hidden');
+      setDifficulty(diff);
+      switchToGame();
+    }
+
+    function startDailyChallenge() {
+      document.getElementById('game-title-display').innerText = "האתגר היומי 📅";
+      document.getElementById('difficulty-selector-bar').classList.add('hidden'); // רמה קבועה מראש
+      setDifficulty('medium');
+      switchToGame();
+    }
+
+    function startJourneyMode() {
+      document.getElementById('game-title-display').innerText = "מסע השלבים - שלב 1 🗺️";
+      document.getElementById('difficulty-selector-bar').classList.add('hidden');
+      setDifficulty('easy');
+      switchToGame();
+    }
+
+    function startCompetitiveMode() {
+      document.getElementById('game-title-display').innerText = "נגד השעון ⚡";
+      document.getElementById('difficulty-selector-bar').classList.add('hidden');
+      setDifficulty('medium');
+      switchToGame();
+    }
+
     // --- ניהול זיכרון ב-LocalStorage ---
 
     function getBestTimes() {
@@ -199,7 +355,6 @@
     function saveGameState() {
       if (!currentDifficulty || !currentBoard.length) return;
       
-      // המרת Set ל-Array עבור שמירה ב-JSON
       const serializableNotes = pencilNotes.map(row => 
         row.map(cellSet => Array.from(cellSet))
       );
@@ -232,7 +387,6 @@
         isPaused = state.isPaused || false;
         isPencilMode = state.isPencilMode || false;
 
-        // המרה בחזרה מ-Array ל-Set
         if (state.pencilNotes) {
           pencilNotes = state.pencilNotes.map(row => 
             row.map(cellArr => new Set(cellArr))
@@ -263,7 +417,7 @@
       localStorage.removeItem('sudoku_active_game');
     }
 
-    // --- מחולל סודוקו + פתורן לוגי אנושי ---
+    // --- מחולל סודוקו + פתורן לוגי ---
 
     function isSafe(board, row, col, num) {
       for (let x = 0; x < 9; x++) {
@@ -599,14 +753,14 @@
 
     function autoCleanPencilNotes(row, col, num) {
       for (let i = 0; i < 9; i++) {
-        pencilNotes[row][i].delete(num); // ניקוי באותה שורה
-        pencilNotes[i][col].delete(num); // ניקוי באותה עמודה
+        pencilNotes[row][i].delete(num);
+        pencilNotes[i][col].delete(num);
       }
       let startRow = row - (row % 3);
       let startCol = col - (col % 3);
       for (let r = 0; r < 3; r++) {
         for (let c = 0; c < 3; c++) {
-          pencilNotes[startRow + r][startCol + c].delete(num); // ניקוי באותו בלוק
+          pencilNotes[startRow + r][startCol + c].delete(num);
         }
       }
     }
@@ -717,7 +871,6 @@
 
           cell.className = classes.join(' ');
 
-          // רינדור מספר סופי או רינדור גריד הערות עיפרון
           if (val !== 0) {
             cell.innerText = val;
           } else if (pencilNotes[r] && pencilNotes[r][c] && pencilNotes[r][c].size > 0) {
@@ -806,17 +959,15 @@
       if (initialPuzzle[row][col] !== 0) return;
       
       if (isPencilMode) {
-        // מצב עיפרון - פתיחה/סגירה של הערה
         if (pencilNotes[row][col].has(num)) {
           pencilNotes[row][col].delete(num);
         } else {
           pencilNotes[row][col].add(num);
         }
       } else {
-        // מצב רגיל - הזנת מספר סופי
         currentBoard[row][col] = num;
-        pencilNotes[row][col].clear(); // ניקוי הערות במשבצת עצמה
-        autoCleanPencilNotes(row, col, num); // ניקוי אוטומטי מהשכנים באותה שורה/עמודה/בלוק
+        pencilNotes[row][col].clear();
+        autoCleanPencilNotes(row, col, num);
       }
 
       errorCells = [];
@@ -835,7 +986,7 @@
       if (initialPuzzle[row][col] !== 0) return;
 
       currentBoard[row][col] = 0;
-      pencilNotes[row][col].clear(); // מחיקת מספר סופי או כל ההערות
+      pencilNotes[row][col].clear();
       errorCells = [];
       saveGameState();
       renderUI();
@@ -872,9 +1023,10 @@
       }
     });
 
-    if (!loadSavedGame()) {
-      renderUI();
-      updateBestTimeDisplay();
+    // אתחול ראשוני
+    updateHomeStats();
+    if (loadSavedGame()) {
+      switchToGame();
     }
   </script>
 </body>
