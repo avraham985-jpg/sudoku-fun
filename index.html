@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Best Time & Auto Save</title>
+  <title>Sudoku Fun - Hybrid Difficulty Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -143,7 +143,7 @@
   </div>
 
   <footer class="text-xs text-slate-400 my-1 text-center">
-    סודוקו כיף - שמירת שיאים ושמירה אוטומטית
+    סודוקו כיף - מחולל קושי היברידי (כמות + לוגיקה)
   </footer>
 
   <script>
@@ -162,7 +162,7 @@
         bestTimes[difficulty] = { seconds, date: today };
         localStorage.setItem('sudoku_best_times', JSON.stringify(bestTimes));
         updateBestTimeDisplay();
-        return true; // נקבע שיא חדש!
+        return true;
       }
       return false;
     }
@@ -228,7 +228,7 @@
           document.getElementById('pause-btn').innerHTML = `<span>▶️</span> המשך`;
         }
 
-        startTimer(true); // המעכה מרווח קודם
+        startTimer(true);
         renderUI();
         updateBestTimeDisplay();
         return true;
@@ -241,7 +241,7 @@
       localStorage.removeItem('sudoku_active_game');
     }
 
-    // --- מחולל סודוקו ---
+    // --- מחולל סודוקו + פתורן לוגי אנושי (Human Logic Solver) ---
 
     function isSafe(board, row, col, num) {
       for (let x = 0; x < 9; x++) {
@@ -275,30 +275,123 @@
       return true;
     }
 
-    function generateSudoku(difficulty) {
-      let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
-      for (let i = 0; i < 9; i += 3) {
-        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-        let idx = 0;
-        for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 3; c++) {
-            fullBoard[i + r][i + c] = nums[idx++];
+    // פתורן לוגי לבדיקת מורכבות הלוח (Naked & Hidden Singles)
+    function evaluateLogicalDifficulty(puzzle) {
+      let temp = JSON.parse(JSON.stringify(puzzle));
+      let steps = 0;
+
+      while (steps < 81) {
+        steps++;
+        let progress = false;
+
+        // 1. Naked Singles (תא עם אופציה בודדת)
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if (temp[r][c] === 0) {
+              let candidates = [];
+              for (let val = 1; val <= 9; val++) {
+                if (isSafe(temp, r, c, val)) candidates.push(val);
+              }
+              if (candidates.length === 1) {
+                temp[r][c] = candidates[0];
+                progress = true;
+              }
+            }
           }
         }
+
+        if (progress) continue;
+
+        // 2. Hidden Singles (מספר בודד בשורה/עמודה)
+        for (let num = 1; num <= 9; num++) {
+          for (let r = 0; r < 9; r++) {
+            let possibleCols = [];
+            for (let c = 0; c < 9; c++) {
+              if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleCols.push(c);
+            }
+            if (possibleCols.length === 1) {
+              temp[r][possibleCols[0]] = num;
+              progress = true;
+            }
+          }
+        }
+
+        if (!progress) break;
       }
+
+      let remainingEmpty = 0;
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (temp[r][c] === 0) remainingEmpty++;
+        }
+      }
+
+      return { solved: remainingEmpty === 0, remainingEmpty };
+    }
+
+    // מחולל היברידי: משלב טווח כמות תאים מוסתרים + אימות לוגי
+    function generateSudoku(difficulty) {
+      let attempts = 0;
+
+      while (attempts < 40) {
+        attempts++;
+        let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
+        
+        for (let i = 0; i < 9; i += 3) {
+          let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+          let idx = 0;
+          for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) fullBoard[i + r][i + c] = nums[idx++];
+          }
+        }
+        solveSudoku(fullBoard);
+        let puzzle = JSON.parse(JSON.stringify(fullBoard));
+
+        // טווח כמויות הסתרה
+        let removeCount = 42;
+        if (difficulty === 'easy') removeCount = 41 + Math.floor(Math.random() * 4);   // 41-44 הסתרות (37-40 גלויים)
+        if (difficulty === 'medium') removeCount = 46 + Math.floor(Math.random() * 5); // 46-50 הסתרות (31-35 גלויים)
+        if (difficulty === 'hard') removeCount = 52 + Math.floor(Math.random() * 5);   // 52-56 הסתרות (25-29 גלויים)
+
+        let removed = 0;
+        let positions = [];
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) positions.push([r, c]);
+        }
+        positions.sort(() => Math.random() - 0.5);
+
+        for (let pos of positions) {
+          if (removed >= removeCount) break;
+          let [r, c] = pos;
+          if (puzzle[r][c] !== 0) {
+            puzzle[r][c] = 0;
+            removed++;
+          }
+        }
+
+        // בדיקה לוגית של איכות הלוח
+        let evalResult = evaluateLogicalDifficulty(puzzle);
+
+        if (difficulty === 'easy' && evalResult.solved) {
+          return { puzzle, solution: fullBoard };
+        } else if (difficulty === 'medium' && (evalResult.solved || evalResult.remainingEmpty <= 8)) {
+          return { puzzle, solution: fullBoard };
+        } else if (difficulty === 'hard' && !evalResult.solved) {
+          return { puzzle, solution: fullBoard };
+        }
+      }
+
+      // ברירת מחדל מהירה במידה ולא נמצא
+      let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
       solveSudoku(fullBoard);
       let puzzle = JSON.parse(JSON.stringify(fullBoard));
-
-      let removeCount = 43; // קל
-      if (difficulty === 'medium') removeCount = 51; 
-      if (difficulty === 'hard') removeCount = 57; 
-
-      while (removeCount > 0) {
+      let fallbackRemove = difficulty === 'easy' ? 42 : (difficulty === 'medium' ? 48 : 54);
+      while (fallbackRemove > 0) {
         let r = Math.floor(Math.random() * 9);
         let c = Math.floor(Math.random() * 9);
         if (puzzle[r][c] !== 0) {
           puzzle[r][c] = 0;
-          removeCount--;
+          fallbackRemove--;
         }
       }
       return { puzzle, solution: fullBoard };
@@ -358,7 +451,7 @@
         if (!isPaused) {
           secondsElapsed++;
           updateTimerDisplay();
-          saveGameState(); // שמירה בכל שניה
+          saveGameState();
         }
       }, 1000);
     }
@@ -479,7 +572,7 @@
 
     function handleWin() {
       stopTimer();
-      clearSavedGame(); // ניקוי המשחק הפעיל מהזיכרון בסיים
+      clearSavedGame();
       playFanfareSound();
       
       const isNewRecord = checkAndUpdateBestTime(currentDifficulty, secondsElapsed);
@@ -678,7 +771,6 @@
       }
     });
 
-    // טעינה ראשונית - ניסיון לשחזור משחק שמור, או הצגת מסך פתיחה
     if (!loadSavedGame()) {
       renderUI();
       updateBestTimeDisplay();
