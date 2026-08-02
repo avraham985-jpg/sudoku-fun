@@ -450,120 +450,158 @@
       return true;
     }
 
-    // בדיקה לוגית: האם הלוח ניתן לפתרון בצעדים פשוטים (Naked & Hidden Singles)
-    function evaluateLogicalDifficulty(puzzle) {
-      let temp = JSON.parse(JSON.stringify(puzzle));
-      let steps = 0;
+// --- פתורן לוגי מתוקן ומלא (שורות, עמודות ובלוקים) ---
+function evaluateLogicalDifficulty(puzzle) {
+  let temp = JSON.parse(JSON.stringify(puzzle));
+  let steps = 0;
 
-      while (steps < 81) {
-        steps++;
-        let progress = false;
+  while (steps < 81) {
+    steps++;
+    let progress = false;
 
-        // Naked Singles
-        for (let r = 0; r < 9; r++) {
-          for (let c = 0; c < 9; c++) {
-            if (temp[r][c] === 0) {
-              let candidates = [];
-              for (let val = 1; val <= 9; val++) {
-                if (isSafe(temp, r, c, val)) candidates.push(val);
-              }
-              if (candidates.length === 1) {
-                temp[r][c] = candidates[0];
-                progress = true;
-              }
-            }
+    // 1. Naked Singles (תא עם אופציה יחידה)
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (temp[r][c] === 0) {
+          let candidates = [];
+          for (let val = 1; val <= 9; val++) {
+            if (isSafe(temp, r, c, val)) candidates.push(val);
+          }
+          if (candidates.length === 1) {
+            temp[r][c] = candidates[0];
+            progress = true;
           }
         }
-
-        if (progress) continue;
-
-        // Hidden Singles
-        for (let num = 1; num <= 9; num++) {
-          for (let r = 0; r < 9; r++) {
-            let possibleCols = [];
-            for (let c = 0; c < 9; c++) {
-              if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleCols.push(c);
-            }
-            if (possibleCols.length === 1) {
-              temp[r][possibleCols[0]] = num;
-              progress = true;
-            }
-          }
-        }
-
-        if (!progress) break;
       }
+    }
 
-      let remainingEmpty = 0;
+    if (progress) continue;
+
+    // 2. Hidden Singles - בשורות
+    for (let num = 1; num <= 9; num++) {
       for (let r = 0; r < 9; r++) {
+        let possibleCols = [];
         for (let c = 0; c < 9; c++) {
-          if (temp[r][c] === 0) remainingEmpty++;
+          if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleCols.push(c);
+        }
+        if (possibleCols.length === 1) {
+          temp[r][possibleCols[0]] = num;
+          progress = true;
         }
       }
-
-      return { solved: remainingEmpty === 0, remainingEmpty };
     }
 
-    // מחולל היברידי משודרג: חריטה הדרגתית עם אימות לוגי
-    function generateSudoku(difficulty) {
-      let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
-      
-      for (let i = 0; i < 9; i += 3) {
-        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-        let idx = 0;
+    if (progress) continue;
+
+    // 3. Hidden Singles - בעמודות (תיקון באג)
+    for (let num = 1; num <= 9; num++) {
+      for (let c = 0; c < 9; c++) {
+        let possibleRows = [];
+        for (let r = 0; r < 9; r++) {
+          if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleRows.push(r);
+        }
+        if (possibleRows.length === 1) {
+          temp[possibleRows[0]][c] = num;
+          progress = true;
+        }
+      }
+    }
+
+    if (progress) continue;
+
+    // 4. Hidden Singles - בבלוקים 3x3 (תיקון באג)
+    for (let num = 1; num <= 9; num++) {
+      for (let b = 0; b < 9; b++) {
+        let startR = Math.floor(b / 3) * 3;
+        let startC = (b % 3) * 3;
+        let possibleCells = [];
         for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 3; c++) fullBoard[i + r][i + c] = nums[idx++];
-        }
-      }
-      solveSudoku(fullBoard);
-
-      let puzzle = JSON.parse(JSON.stringify(fullBoard));
-
-      // יעד תאים גלויים (Clues):
-      // קל: 38-41 תאים גלויים (נדיב מאד וקל!)
-      // בינוני: 31-34 תאים גלויים
-      // קשה: 25-28 תאים גלויים
-      let targetClues = 39;
-      if (difficulty === 'easy') targetClues = 38 + Math.floor(Math.random() * 4);
-      if (difficulty === 'medium') targetClues = 31 + Math.floor(Math.random() * 4);
-      if (difficulty === 'hard') targetClues = 25 + Math.floor(Math.random() * 4);
-
-      let positions = [];
-      for (let r = 0; r < 9; r++) {
-        for (let c = 0; c < 9; c++) positions.push([r, c]);
-      }
-      positions.sort(() => Math.random() - 0.5);
-
-      let currentClues = 81;
-
-      for (let pos of positions) {
-        if (currentClues <= targetClues) break;
-        let [r, c] = pos;
-
-        let tempVal = puzzle[r][c];
-        puzzle[r][c] = 0; // ניסיון מחיקה זמני
-
-        let evalResult = evaluateLogicalDifficulty(puzzle);
-
-        if (difficulty === 'easy') {
-          // ברמה קלה: חובה שכל הלוח יישאר פתיר ב-100% בצעדים פשוטים!
-          if (!evalResult.solved) {
-            puzzle[r][c] = tempVal; // ביטול המחיקה! הלוח הפך לקשה מדי
-            continue;
-          }
-        } else if (difficulty === 'medium') {
-          // ברמה בינונית: מותר לכל היותר 6 תאים שדורשים סימון עיפרון
-          if (evalResult.remainingEmpty > 6) {
-            puzzle[r][c] = tempVal;
-            continue;
+          for (let c = 0; c < 3; c++) {
+            let row = startR + r;
+            let col = startC + c;
+            if (temp[row][col] === 0 && isSafe(temp, row, col, num)) {
+              possibleCells.push([row, col]);
+            }
           }
         }
-
-        currentClues--;
+        if (possibleCells.length === 1) {
+          let [r, c] = possibleCells[0];
+          temp[r][c] = num;
+          progress = true;
+        }
       }
-
-      return { puzzle, solution: fullBoard };
     }
+
+    if (!progress) break;
+  }
+
+  let remainingEmpty = 0;
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (temp[r][c] === 0) remainingEmpty++;
+    }
+  }
+
+  return { solved: remainingEmpty === 0, remainingEmpty };
+}
+
+// --- מחולל סודוקו מאוזן ומהיר ---
+function generateSudoku(difficulty) {
+  let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
+  
+  for (let i = 0; i < 9; i += 3) {
+    let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+    let idx = 0;
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) fullBoard[i + r][i + c] = nums[idx++];
+    }
+  }
+  solveSudoku(fullBoard);
+
+  let puzzle = JSON.parse(JSON.stringify(fullBoard));
+
+  // יעדי תאים גלויים מעודכנים:
+  // קל: 47-50 תאים גלויים (רק 31-34 משבצות להשלים!)
+  // בינוני: 35-38 תאים גלויים
+  // קשה: 27-30 תאים גלויים
+  let targetClues = 48;
+  if (difficulty === 'easy') targetClues = 47 + Math.floor(Math.random() * 4);
+  if (difficulty === 'medium') targetClues = 35 + Math.floor(Math.random() * 4);
+  if (difficulty === 'hard') targetClues = 27 + Math.floor(Math.random() * 4);
+
+  let positions = [];
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) positions.push([r, c]);
+  }
+  positions.sort(() => Math.random() - 0.5);
+
+  let currentClues = 81;
+  let boxEmptyCounts = Array(9).fill(0); // מעקב אחרי ריקנות בלוקים
+
+  for (let pos of positions) {
+    if (currentClues <= targetClues) break;
+    let [r, c] = pos;
+    let boxIdx = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+
+    // ברמה קלה: מניעת עומס בבלוק יחיד (מקסימום 4 ריקים בבלוק)
+    if (difficulty === 'easy' && boxEmptyCounts[boxIdx] >= 4) continue;
+
+    let tempVal = puzzle[r][c];
+    puzzle[r][c] = 0;
+
+    let evalResult = evaluateLogicalDifficulty(puzzle);
+
+    if (difficulty === 'easy' && !evalResult.solved) {
+      puzzle[r][c] = tempVal; // ביטול אם זה דורש לוגיקה מורכבת
+      continue;
+    }
+
+    boxEmptyCounts[boxIdx]++;
+    currentClues--;
+  }
+
+  return { puzzle, solution: fullBoard };
+}
 
     // --- מערכת סאונד מותאמת מובייל ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
