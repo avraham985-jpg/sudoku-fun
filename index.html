@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Mobile Audio Unlocker</title>
+  <title>Sudoku Fun - Pencil Mode & Auto-Cleanup</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -95,19 +95,23 @@
     <!-- מקלדת וכפתורים -->
     <div class="w-full flex flex-col gap-2 mt-1">
       
-      <!-- כפתורי פעולות -->
-      <div class="grid grid-cols-4 gap-1.5">
-        <button onclick="createNewGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
-          <span>🔄</span> חדש
+      <!-- כפתורי פעולות (5 כפתורים בשורה) -->
+      <div class="grid grid-cols-5 gap-1">
+        <button onclick="createNewGame()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <span>🔄</span> <span>חדש</span>
         </button>
-        <button onclick="togglePause()" id="pause-btn" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
-          <span>⏸️</span> השהה
+        <button onclick="togglePause()" id="pause-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <span>⏸️</span> <span>השהה</span>
         </button>
-        <button onclick="checkErrors()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
-          <span>🔍</span> בדיקה
+        <!-- כפתור מצב עיפרון -->
+        <button onclick="togglePencilMode()" id="pencil-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <span>✏️</span> <span>הערות</span>
         </button>
-        <button onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2.5 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-xs flex items-center justify-center gap-1">
-          <span>🗑️</span> מחק
+        <button onclick="checkErrors()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <span>🔍</span> <span>בדיקה</span>
+        </button>
+        <button onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <span>🗑️</span> <span>מחק</span>
         </button>
       </div>
 
@@ -117,7 +121,7 @@
       </div>
       
       <!-- כפתור בדיקות מהיר -->
-      <button onclick="autoSolve()" class="w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-1">
+      <button onclick="autoSolve()" class="w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-0.5">
         ⚡ פתור אוטומטית (לבדיקה בלבד)
       </button>
     </div>
@@ -131,7 +135,6 @@
       <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
       <p class="text-sm text-slate-600">פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">00:00</span>!</p>
       
-      <!-- תיוג שיא חדש -->
       <div id="new-record-badge" class="hidden bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-full border border-amber-300">
         🎉 שיא חדש נקבע היום!
       </div>
@@ -143,7 +146,7 @@
   </div>
 
   <footer class="text-xs text-slate-400 my-1 text-center">
-    סודוקו כיף - מותאם סאונד מלא למובייל
+    סודוקו כיף - מצב עיפרון וניקוי אוטומטי
   </footer>
 
   <script>
@@ -195,13 +198,21 @@
 
     function saveGameState() {
       if (!currentDifficulty || !currentBoard.length) return;
+      
+      // המרת Set ל-Array עבור שמירה ב-JSON
+      const serializableNotes = pencilNotes.map(row => 
+        row.map(cellSet => Array.from(cellSet))
+      );
+
       const state = {
         currentDifficulty,
         initialPuzzle,
         solution,
         currentBoard,
+        pencilNotes: serializableNotes,
         secondsElapsed,
-        isPaused
+        isPaused,
+        isPencilMode
       };
       localStorage.setItem('sudoku_active_game', JSON.stringify(state));
     }
@@ -219,13 +230,24 @@
         currentBoard = state.currentBoard;
         secondsElapsed = state.secondsElapsed || 0;
         isPaused = state.isPaused || false;
+        isPencilMode = state.isPencilMode || false;
+
+        // המרה בחזרה מ-Array ל-Set
+        if (state.pencilNotes) {
+          pencilNotes = state.pencilNotes.map(row => 
+            row.map(cellArr => new Set(cellArr))
+          );
+        } else {
+          pencilNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+        }
 
         updateDifficultyUI();
+        updatePencilButtonUI();
         document.getElementById('start-overlay').classList.add('hidden');
         
         if (isPaused) {
           document.getElementById('pause-overlay').classList.remove('hidden');
-          document.getElementById('pause-btn').innerHTML = `<span>▶️</span> המשך`;
+          document.getElementById('pause-btn').innerHTML = `<span>▶️</span><span>המשך</span>`;
         }
 
         startTimer(true);
@@ -390,14 +412,12 @@
       return { puzzle, solution: fullBoard };
     }
 
-    // --- מערכת סאונד מותאמת מובייל (Audio Context + Unlocker) ---
+    // --- מערכת סאונד מותאמת מובייל ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // מנגנון שחרור שמע מיוחד לניידים בלחיצה ראשונה
     function unlockAudio() {
       if (audioCtx.state === 'suspended') {
         audioCtx.resume().then(() => {
-          // יצירת מפתח שמע קצרצר ומושתק לשחרור המנוע במובייל
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           gain.gain.value = 0;
@@ -407,7 +427,6 @@
           osc.stop(0.001);
         });
       }
-      // הסרת המאזינים לאחר השחרור
       document.removeEventListener('touchstart', unlockAudio);
       document.removeEventListener('click', unlockAudio);
     }
@@ -416,7 +435,6 @@
 
     function playClickSound() {
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      
       const osc = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
       osc.type = 'sine';
@@ -432,7 +450,6 @@
 
     function playFanfareSound() {
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      
       const notes = [
         { freq: 523.25, time: 0, duration: 0.12 },
         { freq: 659.25, time: 0.12, duration: 0.12 },
@@ -492,10 +509,10 @@
 
       if (isPaused) {
         pauseOverlay.classList.remove('hidden');
-        pauseBtn.innerHTML = `<span>▶️</span> המשך`;
+        pauseBtn.innerHTML = `<span>▶️</span><span>המשך</span>`;
       } else {
         pauseOverlay.classList.add('hidden');
-        pauseBtn.innerHTML = `<span>⏸️</span> השהה`;
+        pauseBtn.innerHTML = `<span>⏸️</span><span>השהה</span>`;
       }
       saveGameState();
     }
@@ -506,8 +523,26 @@
     let initialPuzzle = [];
     let solution = [];
     let currentBoard = [];
+    let pencilNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+    let isPencilMode = false;
     let selectedCell = null; 
     let errorCells = []; 
+
+    function togglePencilMode() {
+      playClickSound();
+      isPencilMode = !isPencilMode;
+      updatePencilButtonUI();
+      saveGameState();
+    }
+
+    function updatePencilButtonUI() {
+      const btn = document.getElementById('pencil-btn');
+      if (isPencilMode) {
+        btn.className = "bg-indigo-600 text-white font-bold py-2 rounded-xl shadow-inset ring-2 ring-indigo-400 active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5";
+      } else {
+        btn.className = "bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5";
+      }
+    }
 
     function setDifficulty(diff) {
       playClickSound();
@@ -541,6 +576,8 @@
       initialPuzzle = generated.puzzle;
       solution = generated.solution;
       currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
+      pencilNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+      
       selectedCell = null;
       errorCells = [];
       isPaused = false;
@@ -553,10 +590,25 @@
       if (!solution || solution.length === 0) return;
       playClickSound();
       currentBoard = JSON.parse(JSON.stringify(solution));
+      pencilNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
       selectedCell = null;
       errorCells = [];
       renderUI();
       setTimeout(handleWin, 150);
+    }
+
+    function autoCleanPencilNotes(row, col, num) {
+      for (let i = 0; i < 9; i++) {
+        pencilNotes[row][i].delete(num); // ניקוי באותה שורה
+        pencilNotes[i][col].delete(num); // ניקוי באותה עמודה
+      }
+      let startRow = row - (row % 3);
+      let startCol = col - (col % 3);
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          pencilNotes[startRow + r][startCol + c].delete(num); // ניקוי באותו בלוק
+        }
+      }
     }
 
     function getNumberCounts() {
@@ -664,7 +716,24 @@
           }
 
           cell.className = classes.join(' ');
-          cell.innerText = val !== 0 ? val : '';
+
+          // רינדור מספר סופי או רינדור גריד הערות עיפרון
+          if (val !== 0) {
+            cell.innerText = val;
+          } else if (pencilNotes[r] && pencilNotes[r][c] && pencilNotes[r][c].size > 0) {
+            const notesGrid = document.createElement('div');
+            notesGrid.className = 'grid grid-cols-3 grid-rows-3 w-full h-full p-0.5 text-[8px] leading-none pointer-events-none font-semibold text-slate-400';
+            for (let i = 1; i <= 9; i++) {
+              const noteCell = document.createElement('div');
+              noteCell.className = 'flex items-center justify-center';
+              noteCell.innerText = pencilNotes[r][c].has(i) ? i : '';
+              notesGrid.appendChild(noteCell);
+            }
+            cell.appendChild(notesGrid);
+          } else {
+            cell.innerText = '';
+          }
+
           cell.onclick = () => { 
             if (currentDifficulty && !isPaused) {
               playClickSound(); 
@@ -733,24 +802,40 @@
 
     function handleInput(num) {
       if (!selectedCell || isPaused) return;
-      if (initialPuzzle[selectedCell.row][selectedCell.col] !== 0) return;
+      const { row, col } = selectedCell;
+      if (initialPuzzle[row][col] !== 0) return;
       
-      currentBoard[selectedCell.row][selectedCell.col] = num;
+      if (isPencilMode) {
+        // מצב עיפרון - פתיחה/סגירה של הערה
+        if (pencilNotes[row][col].has(num)) {
+          pencilNotes[row][col].delete(num);
+        } else {
+          pencilNotes[row][col].add(num);
+        }
+      } else {
+        // מצב רגיל - הזנת מספר סופי
+        currentBoard[row][col] = num;
+        pencilNotes[row][col].clear(); // ניקוי הערות במשבצת עצמה
+        autoCleanPencilNotes(row, col, num); // ניקוי אוטומטי מהשכנים באותה שורה/עמודה/בלוק
+      }
+
       errorCells = [];
       saveGameState();
       renderUI();
 
-      if (checkWinCondition()) {
+      if (!isPencilMode && checkWinCondition()) {
         setTimeout(handleWin, 150);
       }
     }
 
     function handleErase() {
-      if (isPaused) return;
+      if (isPaused || !selectedCell) return;
       playClickSound();
-      if (!selectedCell) return;
-      if (initialPuzzle[selectedCell.row][selectedCell.col] !== 0) return;
-      currentBoard[selectedCell.row][selectedCell.col] = 0;
+      const { row, col } = selectedCell;
+      if (initialPuzzle[row][col] !== 0) return;
+
+      currentBoard[row][col] = 0;
+      pencilNotes[row][col].clear(); // מחיקת מספר סופי או כל ההערות
       errorCells = [];
       saveGameState();
       renderUI();
