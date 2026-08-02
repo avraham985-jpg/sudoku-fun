@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Pause & Total Counter</title>
+  <title>Sudoku Fun - Best Time & Auto Save</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -36,7 +36,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-between p-4 select-none">
 
-  <!-- כותרת, טיימר ובוחר רמות קושי -->
+  <!-- כותרת, טיימר, רמות קושי ותצוגת שיא -->
   <header class="w-full max-w-sm text-center my-1 flex flex-col items-center gap-2">
     <div class="w-full flex items-center justify-between px-1">
       <h1 class="text-2xl font-extrabold text-indigo-600 tracking-tight">סודוקו <span class="text-indigo-400 font-light">כיף</span></h1>
@@ -53,6 +53,12 @@
       <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קל</button>
       <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">בינוני</button>
       <button onclick="setDifficulty('hard')" id="btn-hard" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קשה</button>
+    </div>
+
+    <!-- תצוגת שיא אישי ותאריך -->
+    <div id="best-time-bar" class="w-full text-center bg-indigo-50/70 py-1 px-2 rounded-lg border border-indigo-100 text-[11px] font-medium text-indigo-800 flex items-center justify-center gap-1">
+      <span>🏆</span>
+      <span id="best-time-text">שיא אישי: טרם נקבע</span>
     </div>
   </header>
 
@@ -105,7 +111,7 @@
         </button>
       </div>
 
-      <!-- מקלדת חכמה 5x2 (כולל אריח 10 לסך הכל) -->
+      <!-- מקלדת חכמה 5x2 -->
       <div id="keyboard" class="w-full grid grid-cols-5 gap-2">
         <!-- הוזן מ-JS -->
       </div>
@@ -120,21 +126,121 @@
 
   <!-- חלון פופ-אפ לניצחון -->
   <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-4">
+    <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3">
       <div class="text-5xl">🏆</div>
       <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
       <p class="text-sm text-slate-600">פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">00:00</span>!</p>
-      <button onclick="closeWinModal(); createNewGame();" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all">
+      
+      <!-- תיוג שיא חדש -->
+      <div id="new-record-badge" class="hidden bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-full border border-amber-300">
+        🎉 שיא חדש נקבע היום!
+      </div>
+
+      <button onclick="closeWinModal(); createNewGame();" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
         משחק חדש
       </button>
     </div>
   </div>
 
   <footer class="text-xs text-slate-400 my-1 text-center">
-    סודוקו כיף - גרסה עם השהייה וסך הכל מונה
+    סודוקו כיף - שמירת שיאים ושמירה אוטומטית
   </footer>
 
   <script>
+    // --- ניהול זיכרון ב-LocalStorage ---
+
+    function getBestTimes() {
+      const stored = localStorage.getItem('sudoku_best_times');
+      return stored ? JSON.parse(stored) : { easy: null, medium: null, hard: null };
+    }
+
+    function checkAndUpdateBestTime(difficulty, seconds) {
+      const bestTimes = getBestTimes();
+      const today = new Date().toLocaleDateString('he-IL');
+      
+      if (!bestTimes[difficulty] || seconds < bestTimes[difficulty].seconds) {
+        bestTimes[difficulty] = { seconds, date: today };
+        localStorage.setItem('sudoku_best_times', JSON.stringify(bestTimes));
+        updateBestTimeDisplay();
+        return true; // נקבע שיא חדש!
+      }
+      return false;
+    }
+
+    function updateBestTimeDisplay() {
+      const bestTimes = getBestTimes();
+      const textElement = document.getElementById('best-time-text');
+      
+      if (!currentDifficulty) {
+        textElement.innerText = "בחר רמת קושי לצפייה בשיא";
+        return;
+      }
+
+      const record = bestTimes[currentDifficulty];
+      if (record) {
+        const mins = Math.floor(record.seconds / 60).toString().padStart(2, '0');
+        const secs = (record.seconds % 60).toString().padStart(2, '0');
+        textElement.innerText = `שיא (${getDifficultyName(currentDifficulty)}): ${mins}:${secs} (${record.date})`;
+      } else {
+        textElement.innerText = `שיא (${getDifficultyName(currentDifficulty)}): טרם נקבע`;
+      }
+    }
+
+    function getDifficultyName(diff) {
+      if (diff === 'easy') return 'קל';
+      if (diff === 'medium') return 'בינוני';
+      if (diff === 'hard') return 'קשה';
+      return '';
+    }
+
+    function saveGameState() {
+      if (!currentDifficulty || !currentBoard.length) return;
+      const state = {
+        currentDifficulty,
+        initialPuzzle,
+        solution,
+        currentBoard,
+        secondsElapsed,
+        isPaused
+      };
+      localStorage.setItem('sudoku_active_game', JSON.stringify(state));
+    }
+
+    function loadSavedGame() {
+      const stored = localStorage.getItem('sudoku_active_game');
+      if (!stored) return false;
+      try {
+        const state = JSON.parse(stored);
+        if (!state.currentDifficulty || !state.initialPuzzle.length) return false;
+        
+        currentDifficulty = state.currentDifficulty;
+        initialPuzzle = state.initialPuzzle;
+        solution = state.solution;
+        currentBoard = state.currentBoard;
+        secondsElapsed = state.secondsElapsed || 0;
+        isPaused = state.isPaused || false;
+
+        updateDifficultyUI();
+        document.getElementById('start-overlay').classList.add('hidden');
+        
+        if (isPaused) {
+          document.getElementById('pause-overlay').classList.remove('hidden');
+          document.getElementById('pause-btn').innerHTML = `<span>▶️</span> המשך`;
+        }
+
+        startTimer(true); // המעכה מרווח קודם
+        renderUI();
+        updateBestTimeDisplay();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function clearSavedGame() {
+      localStorage.removeItem('sudoku_active_game');
+    }
+
     // --- מחולל סודוקו ---
 
     function isSafe(board, row, col, num) {
@@ -243,15 +349,16 @@
     let secondsElapsed = 0;
     let isPaused = false;
 
-    function startTimer() {
+    function startTimer(isResume = false) {
       stopTimer();
-      secondsElapsed = 0;
-      isPaused = false;
+      if (!isResume) secondsElapsed = 0;
       updateTimerDisplay();
+      
       timerInterval = setInterval(() => {
         if (!isPaused) {
           secondsElapsed++;
           updateTimerDisplay();
+          saveGameState(); // שמירה בכל שניה
         }
       }, 1000);
     }
@@ -281,6 +388,7 @@
         pauseOverlay.classList.add('hidden');
         pauseBtn.innerHTML = `<span>⏸️</span> השהה`;
       }
+      saveGameState();
     }
 
     // --- מצב המשחק ---
@@ -296,6 +404,7 @@
       playClickSound();
       currentDifficulty = diff;
       updateDifficultyUI();
+      updateBestTimeDisplay();
       document.getElementById('start-overlay').classList.add('hidden');
       document.getElementById('pause-overlay').classList.add('hidden');
       createNewGame();
@@ -315,6 +424,7 @@
     function createNewGame() {
       if (!currentDifficulty) currentDifficulty = 'easy';
       updateDifficultyUI();
+      updateBestTimeDisplay();
       document.getElementById('start-overlay').classList.add('hidden');
       document.getElementById('pause-overlay').classList.add('hidden');
 
@@ -324,8 +434,10 @@
       currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
       selectedCell = null;
       errorCells = [];
+      isPaused = false;
       startTimer();
       renderUI();
+      saveGameState();
     }
 
     function autoSolve() {
@@ -367,10 +479,22 @@
 
     function handleWin() {
       stopTimer();
+      clearSavedGame(); // ניקוי המשחק הפעיל מהזיכרון בסיים
       playFanfareSound();
+      
+      const isNewRecord = checkAndUpdateBestTime(currentDifficulty, secondsElapsed);
+      const recordBadge = document.getElementById('new-record-badge');
+      
+      if (isNewRecord) {
+        recordBadge.classList.remove('hidden');
+      } else {
+        recordBadge.classList.add('hidden');
+      }
+
       if (typeof confetti === 'function') {
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       }
+
       document.getElementById('win-time').innerText = document.getElementById('timer-display').innerText;
       document.getElementById('win-modal').classList.remove('hidden');
     }
@@ -448,7 +572,6 @@
       keyboardElement.innerHTML = '';
       const { counts, totalRemaining } = getNumberCounts();
 
-      // מקשים 1-9
       for (let i = 1; i <= 9; i++) {
         const remaining = 9 - counts[i];
         const isCompleted = remaining <= 0;
@@ -484,7 +607,6 @@
         keyboardElement.appendChild(btn);
       }
 
-      // מקש עשירי: סך הכל נותר
       const totalTile = document.createElement('div');
       totalTile.className = "relative flex flex-col items-center justify-center bg-slate-800 text-white font-bold rounded-xl shadow-outset-sm p-1 text-center select-none opacity-90";
       totalTile.innerHTML = `
@@ -506,6 +628,7 @@
       
       currentBoard[selectedCell.row][selectedCell.col] = num;
       errorCells = [];
+      saveGameState();
       renderUI();
 
       if (checkWinCondition()) {
@@ -520,6 +643,7 @@
       if (initialPuzzle[selectedCell.row][selectedCell.col] !== 0) return;
       currentBoard[selectedCell.row][selectedCell.col] = 0;
       errorCells = [];
+      saveGameState();
       renderUI();
     }
 
@@ -554,7 +678,11 @@
       }
     });
 
-    renderUI();
+    // טעינה ראשונית - ניסיון לשחזור משחק שמור, או הצגת מסך פתיחה
+    if (!loadSavedGame()) {
+      renderUI();
+      updateBestTimeDisplay();
+    }
   </script>
 </body>
 </html>
