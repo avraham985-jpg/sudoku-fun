@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Hybrid Difficulty Engine</title>
+  <title>Sudoku Fun - Mobile Audio Unlocker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -143,7 +143,7 @@
   </div>
 
   <footer class="text-xs text-slate-400 my-1 text-center">
-    סודוקו כיף - מחולל קושי היברידי (כמות + לוגיקה)
+    סודוקו כיף - מותאם סאונד מלא למובייל
   </footer>
 
   <script>
@@ -241,7 +241,7 @@
       localStorage.removeItem('sudoku_active_game');
     }
 
-    // --- מחולל סודוקו + פתורן לוגי אנושי (Human Logic Solver) ---
+    // --- מחולל סודוקו + פתורן לוגי אנושי ---
 
     function isSafe(board, row, col, num) {
       for (let x = 0; x < 9; x++) {
@@ -275,7 +275,6 @@
       return true;
     }
 
-    // פתורן לוגי לבדיקת מורכבות הלוח (Naked & Hidden Singles)
     function evaluateLogicalDifficulty(puzzle) {
       let temp = JSON.parse(JSON.stringify(puzzle));
       let steps = 0;
@@ -284,7 +283,6 @@
         steps++;
         let progress = false;
 
-        // 1. Naked Singles (תא עם אופציה בודדת)
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
             if (temp[r][c] === 0) {
@@ -302,7 +300,6 @@
 
         if (progress) continue;
 
-        // 2. Hidden Singles (מספר בודד בשורה/עמודה)
         for (let num = 1; num <= 9; num++) {
           for (let r = 0; r < 9; r++) {
             let possibleCols = [];
@@ -329,7 +326,6 @@
       return { solved: remainingEmpty === 0, remainingEmpty };
     }
 
-    // מחולל היברידי: משלב טווח כמות תאים מוסתרים + אימות לוגי
     function generateSudoku(difficulty) {
       let attempts = 0;
 
@@ -347,11 +343,10 @@
         solveSudoku(fullBoard);
         let puzzle = JSON.parse(JSON.stringify(fullBoard));
 
-        // טווח כמויות הסתרה
         let removeCount = 42;
-        if (difficulty === 'easy') removeCount = 41 + Math.floor(Math.random() * 4);   // 41-44 הסתרות (37-40 גלויים)
-        if (difficulty === 'medium') removeCount = 46 + Math.floor(Math.random() * 5); // 46-50 הסתרות (31-35 גלויים)
-        if (difficulty === 'hard') removeCount = 52 + Math.floor(Math.random() * 5);   // 52-56 הסתרות (25-29 גלויים)
+        if (difficulty === 'easy') removeCount = 41 + Math.floor(Math.random() * 4);
+        if (difficulty === 'medium') removeCount = 46 + Math.floor(Math.random() * 5);
+        if (difficulty === 'hard') removeCount = 52 + Math.floor(Math.random() * 5);
 
         let removed = 0;
         let positions = [];
@@ -369,7 +364,6 @@
           }
         }
 
-        // בדיקה לוגית של איכות הלוח
         let evalResult = evaluateLogicalDifficulty(puzzle);
 
         if (difficulty === 'easy' && evalResult.solved) {
@@ -381,7 +375,6 @@
         }
       }
 
-      // ברירת מחדל מהירה במידה ולא נמצא
       let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
       solveSudoku(fullBoard);
       let puzzle = JSON.parse(JSON.stringify(fullBoard));
@@ -397,11 +390,33 @@
       return { puzzle, solution: fullBoard };
     }
 
-    // --- מערכת סאונד ---
+    // --- מערכת סאונד מותאמת מובייל (Audio Context + Unlocker) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // מנגנון שחרור שמע מיוחד לניידים בלחיצה ראשונה
+    function unlockAudio() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+          // יצירת מפתח שמע קצרצר ומושתק לשחרור המנוע במובייל
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          gain.gain.value = 0;
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(0);
+          osc.stop(0.001);
+        });
+      }
+      // הסרת המאזינים לאחר השחרור
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    }
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
 
     function playClickSound() {
       if (audioCtx.state === 'suspended') audioCtx.resume();
+      
       const osc = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
       osc.type = 'sine';
@@ -417,6 +432,7 @@
 
     function playFanfareSound() {
       if (audioCtx.state === 'suspended') audioCtx.resume();
+      
       const notes = [
         { freq: 523.25, time: 0, duration: 0.12 },
         { freq: 659.25, time: 0.12, duration: 0.12 },
