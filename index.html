@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Game Hub & Full Game</title>
+  <title>Sudoku Fun - Perfect Easy Difficulty Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -72,7 +72,7 @@
               <p class="text-[11px] text-slate-500">משחק חופשי ללא לחץ</p>
             </div>
           </div>
-          <span class="bg-indigo-50 text-indigo-600 font-bold text-[10px] px-2 py-1 rounded-md">4 רמות</span>
+          <span class="bg-indigo-50 text-indigo-600 font-bold text-[10px] px-2 py-1 rounded-md">3 רמות</span>
         </div>
         
         <div class="grid grid-cols-3 gap-1.5 mt-1">
@@ -271,7 +271,6 @@
       const today = new Date().toLocaleDateString('he-IL');
       document.getElementById('daily-date-text').innerText = `חידה ייחודית ל-${today}`;
       
-      // טעינת רצף וכוכבים במידה וקיימים
       const streak = localStorage.getItem('sudoku_streak') || 1;
       const stars = localStorage.getItem('sudoku_stars') || 0;
       document.getElementById('streak-display').innerText = `רצף: ${streak} ימים`;
@@ -287,7 +286,7 @@
 
     function startDailyChallenge() {
       document.getElementById('game-title-display').innerText = "האתגר היומי 📅";
-      document.getElementById('difficulty-selector-bar').classList.add('hidden'); // רמה קבועה מראש
+      document.getElementById('difficulty-selector-bar').classList.add('hidden');
       setDifficulty('medium');
       switchToGame();
     }
@@ -417,7 +416,7 @@
       localStorage.removeItem('sudoku_active_game');
     }
 
-    // --- מחולל סודוקו + פתורן לוגי ---
+    // --- מחולל סודוקו + פתורן לוגי מתוקן ומדויק ---
 
     function isSafe(board, row, col, num) {
       for (let x = 0; x < 9; x++) {
@@ -451,6 +450,7 @@
       return true;
     }
 
+    // בדיקה לוגית: האם הלוח ניתן לפתרון בצעדים פשוטים (Naked & Hidden Singles)
     function evaluateLogicalDifficulty(puzzle) {
       let temp = JSON.parse(JSON.stringify(puzzle));
       let steps = 0;
@@ -459,6 +459,7 @@
         steps++;
         let progress = false;
 
+        // Naked Singles
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
             if (temp[r][c] === 0) {
@@ -476,6 +477,7 @@
 
         if (progress) continue;
 
+        // Hidden Singles
         for (let num = 1; num <= 9; num++) {
           for (let r = 0; r < 9; r++) {
             let possibleCols = [];
@@ -502,67 +504,64 @@
       return { solved: remainingEmpty === 0, remainingEmpty };
     }
 
+    // מחולל היברידי משודרג: חריטה הדרגתית עם אימות לוגי
     function generateSudoku(difficulty) {
-      let attempts = 0;
-
-      while (attempts < 40) {
-        attempts++;
-        let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
-        
-        for (let i = 0; i < 9; i += 3) {
-          let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-          let idx = 0;
-          for (let r = 0; r < 3; r++) {
-            for (let c = 0; c < 3; c++) fullBoard[i + r][i + c] = nums[idx++];
-          }
+      let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
+      
+      for (let i = 0; i < 9; i += 3) {
+        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        let idx = 0;
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) fullBoard[i + r][i + c] = nums[idx++];
         }
-        solveSudoku(fullBoard);
-        let puzzle = JSON.parse(JSON.stringify(fullBoard));
+      }
+      solveSudoku(fullBoard);
 
-        let removeCount = 42;
-        if (difficulty === 'easy') removeCount = 41 + Math.floor(Math.random() * 4);
-        if (difficulty === 'medium') removeCount = 46 + Math.floor(Math.random() * 5);
-        if (difficulty === 'hard') removeCount = 52 + Math.floor(Math.random() * 5);
+      let puzzle = JSON.parse(JSON.stringify(fullBoard));
 
-        let removed = 0;
-        let positions = [];
-        for (let r = 0; r < 9; r++) {
-          for (let c = 0; c < 9; c++) positions.push([r, c]);
-        }
-        positions.sort(() => Math.random() - 0.5);
+      // יעד תאים גלויים (Clues):
+      // קל: 38-41 תאים גלויים (נדיב מאד וקל!)
+      // בינוני: 31-34 תאים גלויים
+      // קשה: 25-28 תאים גלויים
+      let targetClues = 39;
+      if (difficulty === 'easy') targetClues = 38 + Math.floor(Math.random() * 4);
+      if (difficulty === 'medium') targetClues = 31 + Math.floor(Math.random() * 4);
+      if (difficulty === 'hard') targetClues = 25 + Math.floor(Math.random() * 4);
 
-        for (let pos of positions) {
-          if (removed >= removeCount) break;
-          let [r, c] = pos;
-          if (puzzle[r][c] !== 0) {
-            puzzle[r][c] = 0;
-            removed++;
-          }
-        }
+      let positions = [];
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) positions.push([r, c]);
+      }
+      positions.sort(() => Math.random() - 0.5);
+
+      let currentClues = 81;
+
+      for (let pos of positions) {
+        if (currentClues <= targetClues) break;
+        let [r, c] = pos;
+
+        let tempVal = puzzle[r][c];
+        puzzle[r][c] = 0; // ניסיון מחיקה זמני
 
         let evalResult = evaluateLogicalDifficulty(puzzle);
 
-        if (difficulty === 'easy' && evalResult.solved) {
-          return { puzzle, solution: fullBoard };
-        } else if (difficulty === 'medium' && (evalResult.solved || evalResult.remainingEmpty <= 8)) {
-          return { puzzle, solution: fullBoard };
-        } else if (difficulty === 'hard' && !evalResult.solved) {
-          return { puzzle, solution: fullBoard };
+        if (difficulty === 'easy') {
+          // ברמה קלה: חובה שכל הלוח יישאר פתיר ב-100% בצעדים פשוטים!
+          if (!evalResult.solved) {
+            puzzle[r][c] = tempVal; // ביטול המחיקה! הלוח הפך לקשה מדי
+            continue;
+          }
+        } else if (difficulty === 'medium') {
+          // ברמה בינונית: מותר לכל היותר 6 תאים שדורשים סימון עיפרון
+          if (evalResult.remainingEmpty > 6) {
+            puzzle[r][c] = tempVal;
+            continue;
+          }
         }
+
+        currentClues--;
       }
 
-      let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
-      solveSudoku(fullBoard);
-      let puzzle = JSON.parse(JSON.stringify(fullBoard));
-      let fallbackRemove = difficulty === 'easy' ? 42 : (difficulty === 'medium' ? 48 : 54);
-      while (fallbackRemove > 0) {
-        let r = Math.floor(Math.random() * 9);
-        let c = Math.floor(Math.random() * 9);
-        if (puzzle[r][c] !== 0) {
-          puzzle[r][c] = 0;
-          fallbackRemove--;
-        }
-      }
       return { puzzle, solution: fullBoard };
     }
 
