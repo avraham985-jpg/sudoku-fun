@@ -1,37 +1,43 @@
-PROJECT_PROGRESS.md
 # 🧩 Project: Sudoku Fun - Progress & Memory File
 
 ## 🎯 Product Goal
-A mobile-responsive Sudoku web app built at $0 cost, featuring a playful 3D design, engaging gamification, and great UX, aimed at creating a revenue-generating digital asset via ad monetization.
+A mobile-responsive Sudoku web app built at $0 cost, featuring a playful Neumorphic 3D design, engaging gamification, and balanced UX, aimed at creating a revenue-generating digital asset via ad monetization.
 
 ## 🛠️ Tech Stack ($0 Cost)
-- **Frontend & Styling:** HTML5 + Tailwind CSS (Neumorphism 3D styling, mobile-first design)
-- **Logic & Audio:** Vanilla JavaScript (Sudoku board generator, game state management, Web Audio API for sound effects)
-- **Visual Effects:** Canvas Confetti library (Victory celebration effects)
-- **Planned Hosting:** Vercel / Netlify (Free Tier)
-- **Planned Backend/DB:** Supabase / Firebase (Free Tier)
+- **Frontend & Styling:** HTML5 + Tailwind CSS (Neumorphism 3D styling, mobile-first SPA)
+- **Logic & Audio:** Vanilla JavaScript (Procedural board generator, Logical Human-Solver, Web Audio API with Mobile Unlocker)
+- **Visual Effects:** Canvas Confetti library (Victory celebration)
+- **Hosting:** Vercel (Auto-deploys from GitHub `main` branch)
+- **Persistence:** LocalStorage (State auto-save & personal records)
 
-## ✅ Completed Features (MVP v5):
-1. **Dynamic 3D Board:**
-   - Bold 3x3 block borders.
-   - Smart highlighting for selected cell, row, column, block, and matching numbers.
-2. **Smart 3D Keyboard (5x2 Grid):**
-   - 9 number keys with dark badges displaying remaining counts, turning green with a checkmark (`✓`) when complete.
-   - **10th Tile (Total Counter):** Displays the total number of remaining empty cells across the entire board for grid symmetry and progress tracking.
-3. **Core Mechanics & Features:**
-   - Procedural Sudoku puzzle generator (Easy, Medium, Hard difficulty levels).
-   - Error checking tool (highlights incorrect cells in red and unselects the cell for instant visibility).
-   - Pause button (`⏸️`) that blurs the board and freezes the timer.
-   - `⚡ Auto-Solve` button for instant testing of victory triggers.
-4. **Juice & Gamification:**
-   - Synthetic sound effects on click (Web Audio API, no external audio assets needed).
-   - Real-time stopwatch/timer starting only upon selecting a difficulty level.
-   - Fanfare trumpet sound effect + full-screen confetti + victory modal popup upon completing a puzzle.
+## ✅ Completed Features (MVP v6):
+1. **Game Hub (SPA Navigation):**
+   - Central Home View displaying User Streak (🔥) and Stars (⭐).
+   - Mode Selection Cards: Classic, Daily Challenge, Journey Mode, Time Attack.
+   - Smooth view switching (`switchToGame` / `switchToHome`).
+2. **Dynamic 3D Game Screen:**
+   - Bold 3x3 block borders, Neumorphic 3D cell tiles, smart row/col/block/same-number highlighting.
+   - Quick Home button (`🏠`) to save & return to dashboard.
+3. **Smart 3D Keyboard (5x2 Grid):**
+   - 9 number keys with remaining count badges, turning green with `✓` upon completion.
+   - **10th Tile (Total Counter):** Displays remaining empty cells across the board for symmetry and visual progress.
+4. **Pencil Mode & Smart Auto-Cleanup:**
+   - Toggleable `✏️ Notes` mode rendering a $3 \times 3$ candidate grid inside empty cells.
+   - Smart Auto-Cleanup: placing a final number automatically erases that candidate from peer row, column, and 3x3 block notes.
+5. **Precision Hybrid Generator & Difficulty Engine (Re-Balanced):**
+   - **Full Logical Solver:** Evaluates Naked & Hidden Singles across rows, columns, and 3x3 boxes.
+   - **Balanced Easy Mode:** 47–50 clues (~31–34 empty cells to solve), capped at max 4 empty cells per 3x3 box for an easy, casual ~2-3 minute flow.
+   - Medium (35–38 clues) and Hard (27–30 clues) tiers.
+6. **Persistence, Audio & Polish:**
+   - Mobile Audio Unlocker (`unlockAudio`) for seamless sound on iOS/Android.
+   - Pause mode (`⏸️`) with board blur and timer freeze.
+   - LocalStorage auto-saves active game state (survives page reloads).
+   - LocalStorage tracks Best Times per difficulty along with the date achieved.
+   - Fanfare trumpet sound + full-screen confetti + victory modal.
 
 ## 📋 Next Roadmap Items:
-- [ ] Save game state in `LocalStorage` (prevents losing progress on page refresh).
-- [ ] Save best times (`Best Time`) for each difficulty level locally.
-- [ ] Pencil mode (Notes/Pencil Marks) for drafting potential numbers.
-- [ ] PWA integration (Progressive Web App - "Add to Home Screen" support).
-- [ ] User authentication system (Supabase/Firebase) & Daily Challenge feature.
-- [ ] Ad monetization integration (Google AdSense / Ezoic).
+- [ ] Develop **Journey/Level Mode** map UI with star milestones and custom level rules.
+- [ ] Develop **Daily Challenge** calendar grid & streak verification logic.
+- [ ] **PWA Integration:** Add Web App Manifest & Service Worker for "Add to Home Screen" support.
+- [ ] **User Auth & Backend:** Integrate Supabase/Firebase for cross-device sync & global leaderboards.
+- [ ] **Monetization:** Integrate Google AdSense / Ezoic rewarded & interstitial ads.
