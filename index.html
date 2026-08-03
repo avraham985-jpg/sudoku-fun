@@ -1067,10 +1067,9 @@ function generateSudoku(difficulty) {
       }
     });
 
-    // אתחול ראשוני
-    updateHomeStats();
-    if (loadSavedGame()) {
-      switchToGame();
+       // אתחול ראשוני
+      loadSavedGame(); // טוען את נתוני המשחק השמור ברקע (אם קיימים)
+      switchToHome();  // מבטיח שטוענים תמיד את מסך הבית בטעינה ראשונית
     }
   </script>
 </body>
