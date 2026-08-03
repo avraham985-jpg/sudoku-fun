@@ -62,19 +62,20 @@
     <!-- גריד מצבי משחק (2x2) -->
     <main class="grid grid-cols-2 gap-3 w-full">
       
-      <!-- 1. ימין למעלה: סודוקו קלאסי (לחיץ כולו + תצוגת שיאים) -->
-      <div onclick="startClassicGame(currentDifficulty || 'easy')" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group">
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-2xl group-hover:scale-110 transition-transform">🧩</span>
-            <span class="bg-indigo-50 text-indigo-600 font-extrabold text-[9px] px-1.5 py-0.5 rounded-md">שיאים</span>
+      <!-- 1. ימין למעלה: סודוקו קלאסי -->
+      <div onclick="startClassicGame(currentDifficulty || 'easy')" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group overflow-hidden">
+        
+        <!-- כותרת ואייקון בשורה העליונה -->
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="font-extrabold text-slate-800 text-xs sm:text-sm leading-tight">סודוקו קלאסי</h2>
+            <p class="text-[9px] text-slate-400 mt-0.5">משחק חופשי</p>
           </div>
-          <h2 class="font-extrabold text-slate-800 text-sm leading-tight">סודוקו קלאסי</h2>
-          <p class="text-[10px] text-slate-400 mt-0.5">משחק חופשי</p>
+          <span class="text-xl group-hover:scale-110 transition-transform">🧩</span>
         </div>
         
-        <!-- תצוגת שיאים לפי רמות -->
-        <div class="bg-slate-50 p-1.5 rounded-xl border border-slate-100 text-[10px] font-medium flex flex-col gap-0.5 my-auto">
+        <!-- תצוגת שיאים מרוכזת במרכז -->
+        <div class="bg-slate-50 p-1.5 rounded-xl border border-slate-100 text-[9.5px] font-medium flex flex-col gap-0.5 my-auto">
           <div class="flex justify-between items-center">
             <span class="text-slate-400">קל:</span>
             <span id="home-best-easy" class="font-bold font-mono text-indigo-600">--:--</span>
@@ -89,6 +90,7 @@
           </div>
         </div>
 
+        <!-- כפתור שחק בתחתית -->
         <div class="text-left">
           <span class="text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-1 rounded-lg">שחק ←</span>
         </div>
