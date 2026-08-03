@@ -36,7 +36,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-between p-4 select-none">
 
-<!-- ========================================== -->
+  <!-- ========================================== -->
   <!-- 1. מסך הבית (HOME VIEW)                    -->
   <!-- ========================================== -->
   <div id="home-view" class="w-full max-w-sm flex flex-col gap-4 my-auto mx-auto p-2">
@@ -200,18 +200,21 @@
       <!-- מקלדת וכפתורים -->
       <div class="w-full flex flex-col gap-2 mt-1">
         
-        <!-- כפתורי פעולות -->
-        <div class="grid grid-cols-5 gap-1">
+        <!-- כפתורי פעולות (2 שורות של 3 כפתורים) -->
+        <div class="grid grid-cols-3 gap-1.5">
           <button onclick="createNewGame()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>🔄</span> <span>חדש</span>
           </button>
           <button onclick="togglePause()" id="pause-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>⏸️</span> <span>השהה</span>
           </button>
+          <button onclick="giveHint()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+            <span>💡</span> <span>רמז</span>
+          </button>
           <button onclick="togglePencilMode()" id="pencil-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>✏️</span> <span>הערות</span>
           </button>
-          <button onclick="checkErrors()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <button onclick="checkErrors()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>🔍</span> <span>בדיקה</span>
           </button>
           <button onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
@@ -224,9 +227,9 @@
           <!-- הוזן מ-JS -->
         </div>
         
-        <!-- כפתור בדיקות מהיר -->
-        <button onclick="autoSolve()" class="w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-0.5">
-          ⚡ פתור אוטומטית (לבדיקה בלבד)
+        <!-- כפתור פתור אוטומטית (מוסתר כברירת מחדל, מופיע רק ב-Dev Mode) -->
+        <button id="auto-solve-btn" onclick="autoSolve()" class="hidden w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-0.5">
+          ⚡ פתור אוטומטית (מצב מפתח בלבד)
         </button>
       </div>
 
@@ -237,7 +240,7 @@
   <!-- ========================================== -->
   <!-- 3. חלון פופ-אפ לניצחון (MODAL)             -->
   <!-- ========================================== -->
-  <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex-col items-center justify-center z-50 p-4">
     <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3">
       <div class="text-5xl">🏆</div>
       <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
@@ -258,6 +261,27 @@
   <!-- 4. L O G I C & S C R I P T S               -->
   <!-- ========================================== -->
   <script>
+    // --- זיהוי מצב מפתח (Dev Mode) ---
+    function isDevMode() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('dev')) {
+        localStorage.setItem('sudoku_dev_mode', 'true');
+        return true;
+      }
+      return localStorage.getItem('sudoku_dev_mode') === 'true';
+    }
+
+    function checkDevModeUI() {
+      const autoSolveBtn = document.getElementById('auto-solve-btn');
+      if (autoSolveBtn) {
+        if (isDevMode()) {
+          autoSolveBtn.classList.remove('hidden');
+        } else {
+          autoSolveBtn.classList.add('hidden');
+        }
+      }
+    }
+
     // --- ניהול תצוגות (Navigation SPA) ---
     function switchToGame() {
       document.getElementById('home-view').classList.add('hidden');
@@ -406,7 +430,9 @@
         document.getElementById('start-overlay').classList.add('hidden');
         
         if (isPaused) {
-          document.getElementById('pause-overlay').classList.remove('hidden');
+          const pauseOverlay = document.getElementById('pause-overlay');
+          pauseOverlay.classList.remove('hidden');
+          pauseOverlay.classList.add('flex');
           document.getElementById('pause-btn').innerHTML = `<span>▶️</span><span>המשך</span>`;
         }
 
@@ -457,158 +483,151 @@
       return true;
     }
 
-// --- פתורן לוגי מתוקן ומלא (שורות, עמודות ובלוקים) ---
-function evaluateLogicalDifficulty(puzzle) {
-  let temp = JSON.parse(JSON.stringify(puzzle));
-  let steps = 0;
+    function evaluateLogicalDifficulty(puzzle) {
+      let temp = JSON.parse(JSON.stringify(puzzle));
+      let steps = 0;
 
-  while (steps < 81) {
-    steps++;
-    let progress = false;
+      while (steps < 81) {
+        steps++;
+        let progress = false;
 
-    // 1. Naked Singles (תא עם אופציה יחידה)
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (temp[r][c] === 0) {
-          let candidates = [];
-          for (let val = 1; val <= 9; val++) {
-            if (isSafe(temp, r, c, val)) candidates.push(val);
-          }
-          if (candidates.length === 1) {
-            temp[r][c] = candidates[0];
-            progress = true;
-          }
-        }
-      }
-    }
-
-    if (progress) continue;
-
-    // 2. Hidden Singles - בשורות
-    for (let num = 1; num <= 9; num++) {
-      for (let r = 0; r < 9; r++) {
-        let possibleCols = [];
-        for (let c = 0; c < 9; c++) {
-          if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleCols.push(c);
-        }
-        if (possibleCols.length === 1) {
-          temp[r][possibleCols[0]] = num;
-          progress = true;
-        }
-      }
-    }
-
-    if (progress) continue;
-
-    // 3. Hidden Singles - בעמודות (תיקון באג)
-    for (let num = 1; num <= 9; num++) {
-      for (let c = 0; c < 9; c++) {
-        let possibleRows = [];
+        // 1. Naked Singles
         for (let r = 0; r < 9; r++) {
-          if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleRows.push(r);
-        }
-        if (possibleRows.length === 1) {
-          temp[possibleRows[0]][c] = num;
-          progress = true;
-        }
-      }
-    }
-
-    if (progress) continue;
-
-    // 4. Hidden Singles - בבלוקים 3x3 (תיקון באג)
-    for (let num = 1; num <= 9; num++) {
-      for (let b = 0; b < 9; b++) {
-        let startR = Math.floor(b / 3) * 3;
-        let startC = (b % 3) * 3;
-        let possibleCells = [];
-        for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 3; c++) {
-            let row = startR + r;
-            let col = startC + c;
-            if (temp[row][col] === 0 && isSafe(temp, row, col, num)) {
-              possibleCells.push([row, col]);
+          for (let c = 0; c < 9; c++) {
+            if (temp[r][c] === 0) {
+              let candidates = [];
+              for (let val = 1; val <= 9; val++) {
+                if (isSafe(temp, r, c, val)) candidates.push(val);
+              }
+              if (candidates.length === 1) {
+                temp[r][c] = candidates[0];
+                progress = true;
+              }
             }
           }
         }
-        if (possibleCells.length === 1) {
-          let [r, c] = possibleCells[0];
-          temp[r][c] = num;
-          progress = true;
+
+        if (progress) continue;
+
+        // 2. Hidden Singles - בשורות
+        for (let num = 1; num <= 9; num++) {
+          for (let r = 0; r < 9; r++) {
+            let possibleCols = [];
+            for (let c = 0; c < 9; c++) {
+              if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleCols.push(c);
+            }
+            if (possibleCols.length === 1) {
+              temp[r][possibleCols[0]] = num;
+              progress = true;
+            }
+          }
+        }
+
+        if (progress) continue;
+
+        // 3. Hidden Singles - בעמודות
+        for (let num = 1; num <= 9; num++) {
+          for (let c = 0; c < 9; c++) {
+            let possibleRows = [];
+            for (let r = 0; r < 9; r++) {
+              if (temp[r][c] === 0 && isSafe(temp, r, c, num)) possibleRows.push(r);
+            }
+            if (possibleRows.length === 1) {
+              temp[possibleRows[0]][c] = num;
+              progress = true;
+            }
+          }
+        }
+
+        if (progress) continue;
+
+        // 4. Hidden Singles - בבלוקים 3x3
+        for (let num = 1; num <= 9; num++) {
+          for (let b = 0; b < 9; b++) {
+            let startR = Math.floor(b / 3) * 3;
+            let startC = (b % 3) * 3;
+            let possibleCells = [];
+            for (let r = 0; r < 3; r++) {
+              for (let c = 0; c < 3; c++) {
+                let row = startR + r;
+                let col = startC + c;
+                if (temp[row][col] === 0 && isSafe(temp, row, col, num)) {
+                  possibleCells.push([row, col]);
+                }
+              }
+            }
+            if (possibleCells.length === 1) {
+              let [r, c] = possibleCells[0];
+              temp[r][c] = num;
+              progress = true;
+            }
+          }
+        }
+
+        if (!progress) break;
+      }
+
+      let remainingEmpty = 0;
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (temp[r][c] === 0) remainingEmpty++;
         }
       }
+
+      return { solved: remainingEmpty === 0, remainingEmpty };
     }
 
-    if (!progress) break;
-  }
+    function generateSudoku(difficulty) {
+      let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
+      
+      for (let i = 0; i < 9; i += 3) {
+        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        let idx = 0;
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) fullBoard[i + r][i + c] = nums[idx++];
+        }
+      }
+      solveSudoku(fullBoard);
 
-  let remainingEmpty = 0;
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      if (temp[r][c] === 0) remainingEmpty++;
+      let puzzle = JSON.parse(JSON.stringify(fullBoard));
+
+      let targetClues = 48;
+      if (difficulty === 'easy') targetClues = 47 + Math.floor(Math.random() * 4);
+      if (difficulty === 'medium') targetClues = 35 + Math.floor(Math.random() * 4);
+      if (difficulty === 'hard') targetClues = 27 + Math.floor(Math.random() * 4);
+
+      let positions = [];
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) positions.push([r, c]);
+      }
+      positions.sort(() => Math.random() - 0.5);
+
+      let currentClues = 81;
+      let boxEmptyCounts = Array(9).fill(0);
+
+      for (let pos of positions) {
+        if (currentClues <= targetClues) break;
+        let [r, c] = pos;
+        let boxIdx = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+
+        if (difficulty === 'easy' && boxEmptyCounts[boxIdx] >= 4) continue;
+
+        let tempVal = puzzle[r][c];
+        puzzle[r][c] = 0;
+
+        let evalResult = evaluateLogicalDifficulty(puzzle);
+
+        if (difficulty === 'easy' && !evalResult.solved) {
+          puzzle[r][c] = tempVal;
+          continue;
+        }
+
+        boxEmptyCounts[boxIdx]++;
+        currentClues--;
+      }
+
+      return { puzzle, solution: fullBoard };
     }
-  }
-
-  return { solved: remainingEmpty === 0, remainingEmpty };
-}
-
-// --- מחולל סודוקו מאוזן ומהיר ---
-function generateSudoku(difficulty) {
-  let fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
-  
-  for (let i = 0; i < 9; i += 3) {
-    let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-    let idx = 0;
-    for (let r = 0; r < 3; r++) {
-      for (let c = 0; c < 3; c++) fullBoard[i + r][i + c] = nums[idx++];
-    }
-  }
-  solveSudoku(fullBoard);
-
-  let puzzle = JSON.parse(JSON.stringify(fullBoard));
-
-  // יעדי תאים גלויים מעודכנים:
-  // קל: 47-50 תאים גלויים (רק 31-34 משבצות להשלים!)
-  // בינוני: 35-38 תאים גלויים
-  // קשה: 27-30 תאים גלויים
-  let targetClues = 48;
-  if (difficulty === 'easy') targetClues = 47 + Math.floor(Math.random() * 4);
-  if (difficulty === 'medium') targetClues = 35 + Math.floor(Math.random() * 4);
-  if (difficulty === 'hard') targetClues = 27 + Math.floor(Math.random() * 4);
-
-  let positions = [];
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) positions.push([r, c]);
-  }
-  positions.sort(() => Math.random() - 0.5);
-
-  let currentClues = 81;
-  let boxEmptyCounts = Array(9).fill(0); // מעקב אחרי ריקנות בלוקים
-
-  for (let pos of positions) {
-    if (currentClues <= targetClues) break;
-    let [r, c] = pos;
-    let boxIdx = Math.floor(r / 3) * 3 + Math.floor(c / 3);
-
-    // ברמה קלה: מניעת עומס בבלוק יחיד (מקסימום 4 ריקים בבלוק)
-    if (difficulty === 'easy' && boxEmptyCounts[boxIdx] >= 4) continue;
-
-    let tempVal = puzzle[r][c];
-    puzzle[r][c] = 0;
-
-    let evalResult = evaluateLogicalDifficulty(puzzle);
-
-    if (difficulty === 'easy' && !evalResult.solved) {
-      puzzle[r][c] = tempVal; // ביטול אם זה דורש לוגיקה מורכבת
-      continue;
-    }
-
-    boxEmptyCounts[boxIdx]++;
-    currentClues--;
-  }
-
-  return { puzzle, solution: fullBoard };
-}
 
     // --- מערכת סאונד מותאמת מובייל ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -717,6 +736,50 @@ function generateSudoku(difficulty) {
       saveGameState();
     }
 
+    // --- ניהול רמזים ---
+    let hintCell = null;
+    let hintTimeout = null;
+
+    function giveHint() {
+      if (!currentDifficulty || isPaused || !solution.length) return;
+
+      const candidates = [];
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (initialPuzzle[r][c] === 0 && currentBoard[r][c] !== solution[r][c]) {
+            candidates.push({ r, c });
+          }
+        }
+      }
+
+      if (candidates.length === 0) return;
+
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      const { r, c } = target;
+
+      currentBoard[r][c] = solution[r][c];
+      pencilNotes[r][c].clear();
+      autoCleanPencilNotes(r, c, solution[r][c]);
+
+      playClickSound();
+
+      hintCell = { row: r, col: c };
+      if (hintTimeout) clearTimeout(hintTimeout);
+
+      renderUI();
+      saveGameState();
+
+      if (checkWinCondition()) {
+        setTimeout(handleWin, 200);
+        return;
+      }
+
+      hintTimeout = setTimeout(() => {
+        hintCell = null;
+        renderBoard();
+      }, 3000);
+    }
+
     // --- מצב המשחק ---
 
     let currentDifficulty = null; 
@@ -751,6 +814,7 @@ function generateSudoku(difficulty) {
       updateBestTimeDisplay();
       document.getElementById('start-overlay').classList.add('hidden');
       document.getElementById('pause-overlay').classList.add('hidden');
+      document.getElementById('pause-overlay').classList.remove('flex');
       createNewGame();
     }
 
@@ -771,6 +835,7 @@ function generateSudoku(difficulty) {
       updateBestTimeDisplay();
       document.getElementById('start-overlay').classList.add('hidden');
       document.getElementById('pause-overlay').classList.add('hidden');
+      document.getElementById('pause-overlay').classList.remove('flex');
 
       const generated = generateSudoku(currentDifficulty);
       initialPuzzle = generated.puzzle;
@@ -780,6 +845,7 @@ function generateSudoku(difficulty) {
       
       selectedCell = null;
       errorCells = [];
+      hintCell = null;
       isPaused = false;
       startTimer();
       renderUI();
@@ -793,6 +859,7 @@ function generateSudoku(difficulty) {
       pencilNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
       selectedCell = null;
       errorCells = [];
+      hintCell = null;
       renderUI();
       setTimeout(handleWin, 150);
     }
@@ -875,6 +942,7 @@ function generateSudoku(difficulty) {
     function renderUI() {
       renderBoard();
       renderKeyboard();
+      checkDevModeUI();
     }
 
     function renderBoard() {
@@ -896,12 +964,15 @@ function generateSudoku(difficulty) {
           const isFixed = displayPuzzle[r][c] !== 0;
           const val = displayBoard[r][c];
 
+          const isHint = hintCell && hintCell.row === r && hintCell.col === c;
           const isSelected = selectedCell && selectedCell.row === r && selectedCell.col === c;
           const isRelated = selectedCell && (selectedCell.row === r || selectedCell.col === c || (Math.floor(selectedCell.row / 3) === Math.floor(r / 3) && Math.floor(selectedCell.col / 3) === Math.floor(c / 3)));
           const isSameValue = selectedCell && val !== 0 && displayBoard[selectedCell.row][selectedCell.col] === val;
           const isError = errorCells.some(e => e.row === r && e.col === c);
 
-          if (isError && isSelected) {
+          if (isHint) {
+            classes.push('bg-amber-300', 'text-amber-950', 'font-black', 'ring-4', 'ring-amber-500', 'scale-105', 'z-10', 'animate-pulse');
+          } else if (isError && isSelected) {
             classes.push('bg-rose-500', 'text-white', 'font-bold', 'ring-2', 'ring-rose-700', 'error-animate');
           } else if (isError) {
             classes.push('bg-rose-100', 'text-rose-700', 'shadow-outset-sm', 'border-2', 'border-rose-400', 'error-animate');
@@ -915,7 +986,7 @@ function generateSudoku(difficulty) {
             classes.push('bg-white', 'shadow-outset-sm');
           }
 
-          if (!isSelected && !isError) {
+          if (!isSelected && !isError && !isHint) {
             if (isFixed) classes.push('font-extrabold', 'text-slate-900');
             else if (val !== 0) classes.push('font-semibold', 'text-indigo-600');
           }
@@ -1073,10 +1144,11 @@ function generateSudoku(difficulty) {
         handleErase();
       }
     });
-    
-       // אתחול ראשוני
-      loadSavedGame(); // טוען את נתוני המשחק השמור ברקע (אם קיימים)
-      switchToHome();  // מבטיח שטוענים תמיד את מסך הבית בטעינה ראשונית
+
+    // אתחול ראשוני
+    checkDevModeUI();
+    loadSavedGame();
+    switchToHome();
   </script>
 </body>
 </html>
