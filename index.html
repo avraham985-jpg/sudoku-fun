@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Daily Scoring & Competitive Engine</title>
+  <title>Sudoku Fun - Perfect Generator & Balanced Logic Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -163,7 +163,6 @@
       <div class="w-12"></div>
     </header>
 
-    <!-- סרגל טאבים ראשי -->
     <nav class="flex bg-slate-200/80 p-1 rounded-2xl w-full justify-between gap-1 shadow-inset border border-slate-300/50 text-[11px] font-bold">
       <button onclick="switchLeaderboardTab('personal')" id="lb-tab-personal" class="flex-1 py-1.5 rounded-xl transition-all">👤 אישי</button>
       <button onclick="switchLeaderboardTab('daily')" id="lb-tab-daily" class="flex-1 py-1.5 rounded-xl transition-all">📅 יומי</button>
@@ -361,7 +360,7 @@
       <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
       <p class="text-sm text-slate-600">פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">00:00</span>!</p>
       
-      <!-- פירוט ניקוד יומי (מוצג רק באתגר היומי) -->
+      <!-- פירוט ניקוד יומי -->
       <div id="daily-score-breakdown" class="hidden w-full bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex-col gap-1.5 text-xs text-right">
         <div class="font-extrabold text-indigo-800 text-center border-b border-indigo-200/60 pb-1">🎯 ניקוד האתגר היומי</div>
         <div class="flex justify-between text-slate-600"><span>בסיס פתרון:</span><span id="score-base" class="font-bold">100</span></div>
@@ -981,7 +980,64 @@
       localStorage.removeItem('sudoku_active_game');
     }
 
-    // --- מחולל סודוקו דינמי + פתורן לוגי רב-ממדי ---
+    // --- מחולל סודוקו מתקדם: בדיקת יחידות פתרון, פיזור ודירוג לוגי ---
+
+    function countSolutions(board, size = currentSize, limit = 2) {
+      let count = 0;
+      
+      function solve(b) {
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) {
+            if (b[r][c] === 0) {
+              for (let num = 1; num <= size; num++) {
+                if (isSafe(b, r, c, num, size)) {
+                  b[r][c] = num;
+                  solve(b);
+                  b[r][c] = 0;
+                  if (count >= limit) return;
+                }
+              }
+              return;
+            }
+          }
+        }
+        count++;
+      }
+      
+      let temp = JSON.parse(JSON.stringify(board));
+      solve(temp);
+      return count;
+    }
+
+    function isBalanced(puzzle, size = currentSize) {
+      const { boxRows, boxCols } = getBoxDimensions(size);
+      const minCluesPerBox = size === 4 ? 1 : size === 6 ? 2 : size === 12 ? 3 : 2;
+      
+      const numBoxes = size;
+      const numBoxesInRow = size / boxCols;
+      for (let b = 0; b < numBoxes; b++) {
+        let startR = Math.floor(b / numBoxesInRow) * boxRows;
+        let startC = (b % numBoxesInRow) * boxCols;
+        let count = 0;
+        for (let r = 0; r < boxRows; r++) {
+          for (let c = 0; c < boxCols; c++) {
+            if (puzzle[startR + r][startC + c] !== 0) count++;
+          }
+        }
+        if (count < minCluesPerBox) return false;
+      }
+      
+      for (let i = 0; i < size; i++) {
+        let rowCount = 0, colCount = 0;
+        for (let j = 0; j < size; j++) {
+          if (puzzle[i][j] !== 0) rowCount++;
+          if (puzzle[j][i] !== 0) colCount++;
+        }
+        if (rowCount < 2 || colCount < 2) return false;
+      }
+      
+      return true;
+    }
 
     function isSafe(board, row, col, num, size = currentSize) {
       const { boxRows, boxCols } = getBoxDimensions(size);
@@ -1111,66 +1167,86 @@
         }
       }
 
-      return { solved: remainingEmpty === 0, remainingEmpty };
+      return { solvedBySingles: remainingEmpty === 0, remainingEmpty };
     }
 
     function generateSudoku(difficulty, size = currentSize) {
-      const { boxRows, boxCols } = getBoxDimensions(size);
-      let fullBoard = Array.from({ length: size }, () => Array(size).fill(0));
-      
-      let firstRowNums = Array.from({ length: size }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
-      for (let c = 0; c < size; c++) fullBoard[0][c] = firstRowNums[c];
+      let attempts = 0;
+      while (attempts < 20) {
+        attempts++;
+        
+        let fullBoard = Array.from({ length: size }, () => Array(size).fill(0));
+        let firstRowNums = Array.from({ length: size }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+        for (let c = 0; c < size; c++) fullBoard[0][c] = firstRowNums[c];
 
-      solveSudoku(fullBoard, size);
+        solveSudoku(fullBoard, size);
 
-      let puzzle = JSON.parse(JSON.stringify(fullBoard));
-
-      let totalCells = size * size;
-      let targetClues;
-      if (size === 4) {
-        targetClues = difficulty === 'easy' ? 10 : difficulty === 'medium' ? 7 : 5;
-      } else if (size === 6) {
-        targetClues = difficulty === 'easy' ? 22 : difficulty === 'medium' ? 16 : 12;
-      } else if (size === 12) {
-        targetClues = difficulty === 'easy' ? 88 : difficulty === 'medium' ? 68 : 52;
-      } else {
-        targetClues = difficulty === 'easy' ? 47 + Math.floor(Math.random() * 4) : 
-                      difficulty === 'medium' ? 35 + Math.floor(Math.random() * 4) : 
-                      27 + Math.floor(Math.random() * 4);
-      }
-
-      let positions = [];
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) positions.push([r, c]);
-      }
-      positions.sort(() => Math.random() - 0.5);
-
-      let currentClues = totalCells;
-      let boxEmptyCounts = Array(size).fill(0);
-
-      for (let pos of positions) {
-        if (currentClues <= targetClues) break;
-        let [r, c] = pos;
-        let boxIdx = Math.floor(r / boxRows) * (size / boxCols) + Math.floor(c / boxCols);
-
-        let maxAllowedEmptyInBox = Math.ceil((boxRows * boxCols) * 0.55);
-        if (difficulty === 'easy' && boxEmptyCounts[boxIdx] >= maxAllowedEmptyInBox) continue;
-
-        let tempVal = puzzle[r][c];
-        puzzle[r][c] = 0;
-
-        let evalResult = evaluateLogicalDifficulty(puzzle, size);
-
-        if (difficulty === 'easy' && !evalResult.solved) {
-          puzzle[r][c] = tempVal;
-          continue;
+        let puzzle = JSON.parse(JSON.stringify(fullBoard));
+        let totalCells = size * size;
+        
+        let targetClues;
+        if (size === 4) {
+          targetClues = difficulty === 'easy' ? 10 : difficulty === 'medium' ? 7 : 5;
+        } else if (size === 6) {
+          targetClues = difficulty === 'easy' ? 22 : difficulty === 'medium' ? 16 : 12;
+        } else if (size === 12) {
+          targetClues = difficulty === 'easy' ? 88 : difficulty === 'medium' ? 68 : 52;
+        } else {
+          targetClues = difficulty === 'easy' ? 44 + Math.floor(Math.random() * 3) : 
+                        difficulty === 'medium' ? 34 + Math.floor(Math.random() * 3) : 
+                        28 + Math.floor(Math.random() * 3);
         }
 
-        boxEmptyCounts[boxIdx]++;
-        currentClues--;
+        let positions = [];
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) positions.push([r, c]);
+        }
+        positions.sort(() => Math.random() - 0.5);
+
+        let currentClues = totalCells;
+
+        for (let pos of positions) {
+          if (currentClues <= targetClues) break;
+          let [r, c] = pos;
+
+          let tempVal = puzzle[r][c];
+          puzzle[r][c] = 0;
+
+          // 1. בדיקת יחידות פתרון
+          if (countSolutions(puzzle, size, 2) !== 1) {
+            puzzle[r][c] = tempVal;
+            continue;
+          }
+
+          // 2. בדיקת פיזור מרחבי
+          if (!isBalanced(puzzle, size)) {
+            puzzle[r][c] = tempVal;
+            continue;
+          }
+
+          // 3. בדיקת דרגת קושי
+          let evalResult = evaluateLogicalDifficulty(puzzle, size);
+
+          if (difficulty === 'easy' && !evalResult.solvedBySingles) {
+            puzzle[r][c] = tempVal;
+            continue;
+          }
+
+          currentClues--;
+        }
+
+        let finalEval = evaluateLogicalDifficulty(puzzle, size);
+        if (difficulty === 'easy' && !finalEval.solvedBySingles) continue;
+
+        return { puzzle, solution: fullBoard };
       }
 
-      return { puzzle, solution: fullBoard };
+      // גיבוי לביטחון
+      let fullBoard = Array.from({ length: size }, () => Array(size).fill(0));
+      let firstRowNums = Array.from({ length: size }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+      for (let c = 0; c < size; c++) fullBoard[0][c] = firstRowNums[c];
+      solveSudoku(fullBoard, size);
+      return { puzzle: fullBoard, solution: fullBoard };
     }
 
     // --- מערכת סאונד מותאמת מובייל ---
@@ -1511,7 +1587,6 @@
         dailyBreakdown.classList.remove('hidden');
         dailyBreakdown.classList.add('flex');
 
-        // עדכון ניקוד מצטבר ב-LocalStorage
         const currentCum = parseInt(localStorage.getItem('sudoku_daily_cumulative_score') || 0);
         localStorage.setItem('sudoku_daily_cumulative_score', currentCum + scoreData.total);
       } else {
