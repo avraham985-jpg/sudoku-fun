@@ -186,7 +186,7 @@
         </div>
 
         <!-- שכבת כיסוי להשהיה (Pause) -->
-        <div id="pause-overlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md rounded-2xl hidden flex flex-col items-center justify-center p-6 text-center z-20">
+        <div id="pause-overlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md rounded-2xl hidden flex-col items-center justify-center p-6 text-center z-20">
           <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3 animate-fade-in">
             <span class="text-4xl">⏸️</span>
             <h3 class="font-bold text-slate-800 text-lg">המשחק מושהה</h3>
@@ -237,7 +237,7 @@
   <!-- ========================================== -->
   <!-- 3. חלון פופ-אפ לניצחון (MODAL)             -->
   <!-- ========================================== -->
-  <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+  <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3">
       <div class="text-5xl">🏆</div>
       <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
@@ -707,9 +707,11 @@ function generateSudoku(difficulty) {
 
       if (isPaused) {
         pauseOverlay.classList.remove('hidden');
+        pauseOverlay.classList.add('flex');
         pauseBtn.innerHTML = `<span>▶️</span><span>המשך</span>`;
       } else {
         pauseOverlay.classList.add('hidden');
+        pauseOverlay.classList.remove('flex');
         pauseBtn.innerHTML = `<span>⏸️</span><span>השהה</span>`;
       }
       saveGameState();
@@ -855,11 +857,16 @@ function generateSudoku(difficulty) {
       }
 
       document.getElementById('win-time').innerText = document.getElementById('timer-display').innerText;
-      document.getElementById('win-modal').classList.remove('hidden');
+      
+      const winModal = document.getElementById('win-modal');
+      winModal.classList.remove('hidden');
+      winModal.classList.add('flex');
     }
 
     function closeWinModal() {
-      document.getElementById('win-modal').classList.add('hidden');
+      const winModal = document.getElementById('win-modal');
+      winModal.classList.add('hidden');
+      winModal.classList.remove('flex');
     }
 
     const boardElement = document.getElementById('board');
@@ -1066,7 +1073,7 @@ function generateSudoku(difficulty) {
         handleErase();
       }
     });
-
+    
        // אתחול ראשוני
       loadSavedGame(); // טוען את נתוני המשחק השמור ברקע (אם קיימים)
       switchToHome();  // מבטיח שטוענים תמיד את מסך הבית בטעינה ראשונית
