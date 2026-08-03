@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Perfect Easy Difficulty Engine</title>
+  <title>Sudoku Fun - Competitive & Daily Leaderboards</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -60,7 +60,7 @@
     </header>
 
     <!-- כפתור כניסה למסך טבלאות שיאים ומובילים -->
-    <button onclick="switchToLeaderboards()" class="w-full bg-white p-3 rounded-2xl shadow-outset-sm hover:shadow-outset active:scale-95 transition-all flex items-center justify-between px-4 text-indigo-600 font-extrabold text-xs sm:text-sm border border-slate-100">
+    <button onclick="switchToLeaderboards()" class="w-full bg-white p-3.5 rounded-2xl shadow-outset-sm hover:shadow-outset active:scale-95 transition-all flex items-center justify-between px-4 text-indigo-600 font-extrabold text-xs sm:text-sm border border-slate-100">
       <div class="flex items-center gap-2">
         <span class="text-xl">🏆</span>
         <span>טבלאות שיאים ומובילים</span>
@@ -73,48 +73,41 @@
       
       <!-- 1. ימין למעלה: סודוקו קלאסי -->
       <div onclick="startClassicGame('easy')" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group overflow-hidden">
-        
         <div class="flex items-start justify-between">
           <div>
             <h2 class="font-extrabold text-slate-800 text-xs sm:text-sm leading-tight">סודוקו קלאסי</h2>
-            <p class="text-[9px] text-slate-400 mt-0.5">משחק חופשי</p>
+            <p class="text-[9.5px] text-slate-400 mt-1">אימון חופשי בכל הגדלים</p>
           </div>
-          <span class="text-xl group-hover:scale-110 transition-transform">🧩</span>
+          <span class="text-2xl group-hover:scale-110 transition-transform">🧩</span>
         </div>
-        
-        <!-- תצוגת שיאים מרוכזת במרכז -->
-        <div class="bg-slate-50 p-1.5 rounded-xl border border-slate-100 text-[9.5px] font-medium flex flex-col gap-0.5 my-auto">
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">קל:</span>
-            <span id="home-best-easy" class="font-bold font-mono text-indigo-600">--:--</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">בינוני:</span>
-            <span id="home-best-medium" class="font-bold font-mono text-indigo-600">--:--</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">קשה:</span>
-            <span id="home-best-hard" class="font-bold font-mono text-indigo-600">--:--</span>
-          </div>
+        <div class="my-auto">
+          <p class="text-[10px] text-slate-500 leading-snug">משחק רגוע עם רמזים, הערות והשהיה</p>
         </div>
-
         <div class="text-left">
           <span class="text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-1 rounded-lg">שחק ←</span>
         </div>
       </div>
 
-      <!-- 2. משמאל למעלה: נגד השעון -->
-      <div onclick="startCompetitiveMode()" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group">
+      <!-- 2. משמאל למעלה: מצב תחרותי (עם בחירת רמה ישירה בכרטיסייה) -->
+      <div class="bg-white p-3 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square text-right group">
         <div class="flex items-center justify-between">
-          <span class="text-2xl group-hover:scale-110 transition-transform">⚡</span>
-          <span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">מהיר</span>
+          <span class="text-xl group-hover:scale-110 transition-transform">⚡</span>
+          <span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">רשמי</span>
         </div>
+        
         <div class="my-auto">
-          <h2 class="font-extrabold text-slate-800 text-sm leading-tight">נגד השעון</h2>
-          <p class="text-[10px] text-slate-400 mt-1">3 דקות לפתור</p>
+          <h2 class="font-extrabold text-slate-800 text-xs sm:text-sm leading-tight">מצב תחרותי</h2>
+          <p class="text-[9px] text-slate-400 mt-0.5">9x9 • ללא עזרים ורמזים</p>
         </div>
-        <div class="text-left">
-          <span class="text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-1 rounded-lg">שחק ←</span>
+
+        <!-- בחירת רמה ישירות מהכרטיסייה -->
+        <div class="flex flex-col gap-1 w-full">
+          <span class="text-[9px] text-slate-400 font-bold">בחר רמה לתחרות:</span>
+          <div class="grid grid-cols-3 gap-1">
+            <button onclick="startCompetitiveMode('easy')" class="bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 font-bold py-1 text-[10px] rounded-lg border border-emerald-200/60 active:scale-95 transition-all text-center">קל</button>
+            <button onclick="startCompetitiveMode('medium')" class="bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-700 font-bold py-1 text-[10px] rounded-lg border border-amber-200/60 active:scale-95 transition-all text-center">בינוני</button>
+            <button onclick="startCompetitiveMode('hard')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 font-bold py-1 text-[10px] rounded-lg border border-rose-200/60 active:scale-95 transition-all text-center">קשה</button>
+          </div>
         </div>
       </div>
 
@@ -169,20 +162,19 @@
       <h1 class="text-lg font-black text-indigo-600 tracking-tight flex items-center gap-1.5">
         <span>🏆</span> <span>שיאים ומובילים</span>
       </h1>
-      <div class="w-12"></div> <!-- ספייסר לאיזון הפלקס -->
+      <div class="w-12"></div>
     </header>
 
-    <!-- סרגל טאבים ראשי (4 טאבים) -->
+    <!-- סרגל טאבים ראשי -->
     <nav class="flex bg-slate-200/80 p-1 rounded-2xl w-full justify-between gap-1 shadow-inset border border-slate-300/50 text-[11px] font-bold">
       <button onclick="switchLeaderboardTab('personal')" id="lb-tab-personal" class="flex-1 py-1.5 rounded-xl transition-all">👤 אישי</button>
       <button onclick="switchLeaderboardTab('daily')" id="lb-tab-daily" class="flex-1 py-1.5 rounded-xl transition-all">📅 יומי</button>
-      <button onclick="switchLeaderboardTab('classic')" id="lb-tab-classic" class="flex-1 py-1.5 rounded-xl transition-all">🧩 קלאסי</button>
+      <button onclick="switchLeaderboardTab('competitive')" id="lb-tab-competitive" class="flex-1 py-1.5 rounded-xl transition-all">⚡ תחרותי</button>
       <button onclick="switchLeaderboardTab('stars')" id="lb-tab-stars" class="flex-1 py-1.5 rounded-xl transition-all">⭐ כוכבים</button>
     </nav>
 
     <!-- תוכן טאב 1: שיאים אישיים -->
     <section id="lb-content-personal" class="w-full flex flex-col gap-3">
-      <!-- תפריט גודל לוח -->
       <div class="flex bg-slate-100 p-1 rounded-xl w-full justify-between gap-1 border border-slate-200 shadow-sm text-xs font-bold">
         <button onclick="setPersonalSizeTab(4)" id="btn-lb-size-4" class="flex-1 py-1 rounded-lg">4x4</button>
         <button onclick="setPersonalSizeTab(6)" id="btn-lb-size-6" class="flex-1 py-1 rounded-lg">6x6</button>
@@ -190,7 +182,6 @@
         <button onclick="setPersonalSizeTab(12)" id="btn-lb-size-12" class="flex-1 py-1 rounded-lg">12x12</button>
       </div>
 
-      <!-- כרטיסיות שיא לפי רמת קושי -->
       <div id="personal-records-grid" class="flex flex-col gap-2 w-full">
         <!-- מוזן מ-JS -->
       </div>
@@ -198,37 +189,37 @@
 
     <!-- תוכן טאב 2: האתגר היומי -->
     <section id="lb-content-daily" class="w-full hidden flex-col gap-2.5">
-      <div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-md text-center flex flex-col gap-1">
-        <span class="text-xs font-medium text-indigo-200">האתגר היומי של היום</span>
+      <div class="flex bg-indigo-50 p-1 rounded-xl w-full justify-between gap-1 border border-indigo-100 text-xs font-bold">
+        <button onclick="setDailySubTab('today')" id="btn-daily-sub-today" class="flex-1 py-1 rounded-lg transition-all">🎯 חידת היום</button>
+        <button onclick="setDailySubTab('cumulative')" id="btn-daily-sub-cumulative" class="flex-1 py-1 rounded-lg transition-all">🔥 ניקוד מצטבר ורצף</button>
+      </div>
+
+      <div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-md text-center flex flex-col gap-0.5">
+        <span id="lb-daily-subtitle" class="text-xs font-medium text-indigo-200">דירוג היומי</span>
         <h3 id="lb-daily-date" class="text-sm font-black">---</h3>
-        <p class="text-[10px] text-indigo-100">הדירוג נקבע לפי זמן הפתרון + בונוס רצף ימים 🔥</p>
       </div>
 
       <div class="bg-white rounded-2xl shadow-outset p-3 border border-slate-100">
-        <div class="text-xs font-bold text-slate-700 mb-2 flex justify-between items-center px-1">
-          <span>אלופי היום (Top 10)</span>
-          <span class="text-[10px] text-indigo-600 font-semibold">מתרענן בלייב</span>
-        </div>
         <div id="daily-leaderboard-list" class="flex flex-col gap-1.5 text-xs">
           <!-- מוזן מ-JS -->
         </div>
       </div>
     </section>
 
-    <!-- תוכן טאב 3: קלאסי 9x9 -->
-    <section id="lb-content-classic" class="w-full hidden flex-col gap-2.5">
+    <!-- תוכן טאב 3: תחרותי 9x9 -->
+    <section id="lb-content-competitive" class="w-full hidden flex-col gap-2.5">
       <div class="flex bg-slate-100 p-1 rounded-xl w-full justify-between gap-1 border border-slate-200 shadow-sm text-xs font-bold">
-        <button onclick="setClassicDiffTab('easy')" id="btn-lb-diff-easy" class="flex-1 py-1 rounded-lg">קל</button>
-        <button onclick="setClassicDiffTab('medium')" id="btn-lb-diff-medium" class="flex-1 py-1 rounded-lg">בינוני</button>
-        <button onclick="setClassicDiffTab('hard')" id="btn-lb-diff-hard" class="flex-1 py-1 rounded-lg">קשה</button>
+        <button onclick="setCompetitiveDiffTab('easy')" id="btn-lb-comp-easy" class="flex-1 py-1 rounded-lg">קל</button>
+        <button onclick="setCompetitiveDiffTab('medium')" id="btn-lb-comp-medium" class="flex-1 py-1 rounded-lg">בינוני</button>
+        <button onclick="setCompetitiveDiffTab('hard')" id="btn-lb-comp-hard" class="flex-1 py-1 rounded-lg">קשה</button>
       </div>
 
       <div class="bg-white rounded-2xl shadow-outset p-3 border border-slate-100">
-        <div class="text-xs font-bold text-slate-700 mb-2 px-1 flex justify-between">
-          <span>דירוג עולמי - סודוקו 9x9</span>
-          <span id="lb-classic-diff-title" class="text-indigo-600 font-extrabold">רמה: קל</span>
+        <div class="text-xs font-bold text-slate-700 mb-2 px-1 flex justify-between items-center">
+          <span>דירוג רשמי - סודוקו 9x9</span>
+          <span id="lb-comp-diff-title" class="text-indigo-600 font-extrabold">רמה: קל</span>
         </div>
-        <div id="classic-leaderboard-list" class="flex flex-col gap-1.5 text-xs">
+        <div id="competitive-leaderboard-list" class="flex flex-col gap-1.5 text-xs">
           <!-- מוזן מ-JS -->
         </div>
       </div>
@@ -272,6 +263,11 @@
         </div>
       </div>
 
+      <!-- באנר מצב תחרותי -->
+      <div id="competitive-banner" class="hidden w-full bg-amber-500 text-white font-extrabold text-[11px] py-1 px-3 rounded-xl shadow-sm text-center items-center justify-center gap-1.5">
+        <span>⚡</span> <span>מצב תחרותי - ללא רמזים, עזרים או השהיה!</span>
+      </div>
+
       <!-- בחירת גודל לוח -->
       <div id="size-selector-bar" class="flex bg-slate-200/80 p-1.5 rounded-2xl w-full justify-between gap-1.5 shadow-inset border border-slate-300/50">
         <button onclick="setSize(4)" id="btn-size-4" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">4x4</button>
@@ -280,7 +276,7 @@
         <button onclick="setSize(12)" id="btn-size-12" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">12x12</button>
       </div>
       
-      <!-- בחירת רמת קושי -->
+      <!-- בחירת רמת קושי (מוסתר לחלוטין במצב תחרותי) -->
       <div id="difficulty-selector-bar" class="flex bg-slate-200/80 p-1.5 rounded-2xl w-full justify-between gap-1.5 shadow-inset border border-slate-300/50">
         <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">קל</button>
         <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">בינוני</button>
@@ -326,24 +322,24 @@
       <!-- מקלדת וכפתורים -->
       <div class="w-full flex flex-col gap-2 mt-1">
         
-        <!-- כפתורי פעולות -->
+        <!-- כפתורי פעולות (מוסתרים/מנוטרלים במצב תחרותי) -->
         <div class="grid grid-cols-3 gap-1.5">
-          <button onclick="createNewGame()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <button id="action-btn-new" onclick="createNewGame()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>🔄</span> <span>חדש</span>
           </button>
-          <button onclick="togglePause()" id="pause-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <button id="action-btn-pause" onclick="togglePause()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>⏸️</span> <span>השהה</span>
           </button>
-          <button onclick="giveHint()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <button id="action-btn-hint" onclick="giveHint()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>💡</span> <span>רמז</span>
           </button>
-          <button onclick="togglePencilMode()" id="pencil-btn" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <button id="action-btn-pencil" onclick="togglePencilMode()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>✏️</span> <span>הערות</span>
           </button>
-          <button onclick="checkErrors()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <button id="action-btn-check" onclick="checkErrors()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>🔍</span> <span>בדיקה</span>
           </button>
-          <button onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
+          <button id="action-btn-erase" onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>🗑️</span> <span>מחק</span>
           </button>
         </div>
@@ -387,6 +383,8 @@
   <!-- 5. L O G I C & S C R I P T S               -->
   <!-- ========================================== -->
   <script>
+    let isCompetitiveMode = false;
+
     // --- מיפוי גודלי בלוקים פנימיים ---
     function getBoxDimensions(size) {
       if (size === 4) return { boxRows: 2, boxCols: 2 };
@@ -423,6 +421,7 @@
       document.getElementById('leaderboard-view').classList.remove('flex');
       document.getElementById('game-view').classList.remove('hidden');
       document.getElementById('game-view').classList.add('flex');
+      updateCompetitiveUI();
     }
 
     function switchToHome() {
@@ -455,25 +454,10 @@
       const stars = localStorage.getItem('sudoku_stars') || 0;
       document.getElementById('streak-display').innerText = `רצף: ${streak} ימים`;
       document.getElementById('stars-display').innerText = `כוכבים: ${stars}`;
-
-      // עדכון שיאי 9x9 בכרטיס סודוקו קלאסי במסך הבית
-      const bestTimes = getBestTimes();
-      ['easy', 'medium', 'hard'].forEach(diff => {
-        const el = document.getElementById(`home-best-${diff}`);
-        if (el) {
-          const rec = bestTimes[`9_${diff}`] || bestTimes[diff];
-          if (rec) {
-            const mins = Math.floor(rec.seconds / 60).toString().padStart(2, '0');
-            const secs = (rec.seconds % 60).toString().padStart(2, '0');
-            el.innerText = `${mins}:${secs}`;
-          } else {
-            el.innerText = '--:--';
-          }
-        }
-      });
     }
 
     function startClassicGame(diff = 'easy', size = 9) {
+      isCompetitiveMode = false;
       document.getElementById('game-title-display').innerText = "סודוקו קלאסי";
       document.getElementById('difficulty-selector-bar').classList.remove('hidden');
       document.getElementById('size-selector-bar').classList.remove('hidden');
@@ -483,7 +467,19 @@
       switchToGame();
     }
 
+    function startCompetitiveMode(diff = 'easy') {
+      isCompetitiveMode = true;
+      document.getElementById('game-title-display').innerText = `מצב תחרותי (${getDifficultyName(diff)}) ⚡`;
+      document.getElementById('difficulty-selector-bar').classList.add('hidden');
+      document.getElementById('size-selector-bar').classList.add('hidden');
+      currentSize = 9; // strictly 9x9
+      updateSizeUI();
+      setDifficulty(diff || 'easy');
+      switchToGame();
+    }
+
     function startDailyChallenge() {
+      isCompetitiveMode = false;
       document.getElementById('game-title-display').innerText = "האתגר היומי 📅";
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
       document.getElementById('size-selector-bar').classList.add('hidden');
@@ -494,6 +490,7 @@
     }
 
     function startJourneyMode() {
+      isCompetitiveMode = false;
       document.getElementById('game-title-display').innerText = "מסע השלבים - שלב 1 🗺️";
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
       document.getElementById('size-selector-bar').classList.add('hidden');
@@ -503,25 +500,48 @@
       switchToGame();
     }
 
-    function startCompetitiveMode() {
-      document.getElementById('game-title-display').innerText = "נגד השעון ⚡";
-      document.getElementById('difficulty-selector-bar').classList.add('hidden');
-      document.getElementById('size-selector-bar').classList.add('hidden');
-      currentSize = 9;
-      updateSizeUI();
-      setDifficulty('medium');
-      switchToGame();
+    function updateCompetitiveUI() {
+      const banner = document.getElementById('competitive-banner');
+      const diffBar = document.getElementById('difficulty-selector-bar');
+      const sizeBar = document.getElementById('size-selector-bar');
+
+      const pauseBtn = document.getElementById('action-btn-pause');
+      const hintBtn = document.getElementById('action-btn-hint');
+      const checkBtn = document.getElementById('action-btn-check');
+      const newBtn = document.getElementById('action-btn-new');
+
+      if (isCompetitiveMode) {
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+        
+        diffBar.classList.add('hidden');
+        sizeBar.classList.add('hidden');
+
+        pauseBtn.classList.add('opacity-40', 'pointer-events-none');
+        hintBtn.classList.add('opacity-40', 'pointer-events-none');
+        checkBtn.classList.add('opacity-40', 'pointer-events-none');
+        newBtn.classList.add('opacity-40', 'pointer-events-none');
+      } else {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+
+        pauseBtn.classList.remove('opacity-40', 'pointer-events-none');
+        hintBtn.classList.remove('opacity-40', 'pointer-events-none');
+        checkBtn.classList.remove('opacity-40', 'pointer-events-none');
+        newBtn.classList.remove('opacity-40', 'pointer-events-none');
+      }
     }
 
     // --- ניהול מסך טבלאות שיאים (LEADERBOARDS ENGINE) ---
 
     let currentLbTab = 'personal';
     let currentLbPersonalSize = 9;
-    let currentLbClassicDiff = 'easy';
+    let currentLbCompDiff = 'easy';
+    let currentDailySubTab = 'today';
 
     function switchLeaderboardTab(tab) {
       currentLbTab = tab;
-      ['personal', 'daily', 'classic', 'stars'].forEach(t => {
+      ['personal', 'daily', 'competitive', 'stars'].forEach(t => {
         const btn = document.getElementById(`lb-tab-${t}`);
         const content = document.getElementById(`lb-content-${t}`);
         if (t === tab) {
@@ -536,8 +556,8 @@
       });
 
       if (tab === 'personal') renderPersonalBests(currentLbPersonalSize);
-      if (tab === 'daily') renderDailyLeaderboard();
-      if (tab === 'classic') renderClassicLeaderboard(currentLbClassicDiff);
+      if (tab === 'daily') renderDailyLeaderboard(currentDailySubTab);
+      if (tab === 'competitive') renderCompetitiveLeaderboard(currentLbCompDiff);
       if (tab === 'stars') renderStarsLeaderboard();
     }
 
@@ -603,54 +623,98 @@
       });
     }
 
-    function renderDailyLeaderboard() {
+    function setDailySubTab(subTab) {
+      currentDailySubTab = subTab;
+      renderDailyLeaderboard(subTab);
+    }
+
+    function renderDailyLeaderboard(subTab = 'today') {
       const today = new Date().toLocaleDateString('he-IL');
-      document.getElementById('lb-daily-date').innerText = today;
+      const btnToday = document.getElementById('btn-daily-sub-today');
+      const btnCum = document.getElementById('btn-daily-sub-cumulative');
+      const subtitle = document.getElementById('lb-daily-subtitle');
+      const dateHeader = document.getElementById('lb-daily-date');
+
+      if (subTab === 'today') {
+        btnToday.className = "flex-1 py-1 rounded-lg bg-indigo-600 text-white shadow-sm";
+        btnCum.className = "flex-1 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100";
+        subtitle.innerText = "דירוג חידת היום";
+        dateHeader.innerText = today;
+      } else {
+        btnCum.className = "flex-1 py-1 rounded-lg bg-indigo-600 text-white shadow-sm";
+        btnToday.className = "flex-1 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100";
+        subtitle.innerText = "טבלת אלופי הרצף והסך המצטבר";
+        dateHeader.innerText = "כל הזמנים 🔥";
+      }
 
       const container = document.getElementById('daily-leaderboard-list');
       container.innerHTML = '';
-
       const userStreak = localStorage.getItem('sudoku_streak') || 1;
 
-      // נתוני דמו מובילים (להכנה לחיבור בסיס נתונים)
-      const mockLeaders = [
-        { rank: 1, name: 'דניאל קליין', time: '01:42', streak: 14, score: '1,280' },
-        { rank: 2, name: 'מיכל שורץ', time: '01:55', streak: 8, score: '1,190' },
-        { rank: 3, name: 'יובל גולן', time: '02:08', streak: 21, score: '1,150' },
-        { rank: 4, name: 'נועם אריאלי', time: '02:24', streak: 5, score: '980' },
-        { rank: 5, name: 'אתה (השיא שלך)', time: '02:35', streak: parseInt(userStreak), score: '940', isUser: true },
-        { rank: 6, name: 'עדי מזרחי', time: '02:41', streak: 3, score: '890' }
-      ];
+      if (subTab === 'today') {
+        const mockToday = [
+          { rank: 1, name: 'דניאל קליין', time: '01:42', score: '1,280' },
+          { rank: 2, name: 'מיכל שורץ', time: '01:55', score: '1,190' },
+          { rank: 3, name: 'יובל גולן', time: '02:08', score: '1,150' },
+          { rank: 4, name: 'אתה (היום)', time: '02:35', score: '940', isUser: true },
+          { rank: 5, name: 'עדי מזרחי', time: '02:41', score: '890' }
+        ];
 
-      mockLeaders.forEach(item => {
-        const row = document.createElement('div');
-        const bgClass = item.isUser ? 'bg-indigo-50 border-2 border-indigo-400 font-bold' : 'bg-slate-50 border border-slate-100';
-        const rankBadge = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`;
+        mockToday.forEach(item => {
+          const row = document.createElement('div');
+          const bgClass = item.isUser ? 'bg-indigo-50 border-2 border-indigo-400 font-bold' : 'bg-slate-50 border border-slate-100';
+          const rankBadge = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`;
 
-        row.className = `p-2 rounded-xl flex items-center justify-between ${bgClass}`;
-        row.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="w-6 text-center font-black text-xs text-slate-600">${rankBadge}</span>
-            <span class="text-slate-800 text-xs">${item.name}</span>
-          </div>
-          <div class="flex items-center gap-2.5 text-[11px]">
-            <span class="text-slate-400">🔥 ${item.streak}d</span>
-            <span class="font-mono font-bold text-slate-700">${item.time}</span>
-            <span class="font-bold text-indigo-600 bg-indigo-100/60 px-1.5 py-0.5 rounded-md">${item.score}</span>
-          </div>
-        `;
-        container.appendChild(row);
-      });
+          row.className = `p-2 rounded-xl flex items-center justify-between ${bgClass}`;
+          row.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="w-6 text-center font-black text-xs text-slate-600">${rankBadge}</span>
+              <span class="text-slate-800 text-xs">${item.name}</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-[11px]">
+              <span class="font-mono font-bold text-slate-700">${item.time}</span>
+              <span class="font-bold text-indigo-600 bg-indigo-100/60 px-1.5 py-0.5 rounded-md">${item.score} נקו'</span>
+            </div>
+          `;
+          container.appendChild(row);
+        });
+      } else {
+        const mockCumulative = [
+          { rank: 1, name: 'יובל גולן', streak: 28, totalScore: '34,200' },
+          { rank: 2, name: 'דניאל קליין', streak: 21, totalScore: '28,900' },
+          { rank: 3, name: 'אתה', streak: parseInt(userStreak), totalScore: '14,500', isUser: true },
+          { rank: 4, name: 'מיכל שורץ', streak: 12, totalScore: '12,100' }
+        ];
+
+        mockCumulative.forEach(item => {
+          const row = document.createElement('div');
+          const bgClass = item.isUser ? 'bg-indigo-50 border-2 border-indigo-400 font-bold' : 'bg-slate-50 border border-slate-100';
+          const rankBadge = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`;
+
+          row.className = `p-2 rounded-xl flex items-center justify-between ${bgClass}`;
+          row.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="w-6 text-center font-black text-xs text-slate-600">${rankBadge}</span>
+              <span class="text-slate-800 text-xs">${item.name}</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-[11px]">
+              <span class="text-amber-700 font-extrabold bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">🔥 רצף ${item.streak}</span>
+              <span class="font-extrabold text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-md">${item.totalScore}</span>
+            </div>
+          `;
+          container.appendChild(row);
+        });
+      }
     }
 
-    function setClassicDiffTab(diff) {
-      currentLbClassicDiff = diff;
-      renderClassicLeaderboard(diff);
+    function setCompetitiveDiffTab(diff) {
+      currentLbCompDiff = diff;
+      renderCompetitiveLeaderboard(diff);
     }
 
-    function renderClassicLeaderboard(diff) {
+    function renderCompetitiveLeaderboard(diff) {
       ['easy', 'medium', 'hard'].forEach(d => {
-        const btn = document.getElementById(`btn-lb-diff-${d}`);
+        const btn = document.getElementById(`btn-lb-comp-${d}`);
         if (btn) {
           if (d === diff) {
             btn.className = "flex-1 py-1 rounded-lg bg-indigo-600 text-white shadow-sm";
@@ -660,8 +724,8 @@
         }
       });
 
-      document.getElementById('lb-classic-diff-title').innerText = `רמה: ${getDifficultyName(diff)}`;
-      const container = document.getElementById('classic-leaderboard-list');
+      document.getElementById('lb-comp-diff-title').innerText = `רמה: ${getDifficultyName(diff)}`;
+      const container = document.getElementById('competitive-leaderboard-list');
       container.innerHTML = '';
 
       const bestTimes = getBestTimes();
@@ -677,18 +741,18 @@
         easy: [
           { rank: 1, name: 'עומר לוי', time: '01:12', date: '01/08' },
           { rank: 2, name: 'שירה כהן', time: '01:18', date: '02/08' },
-          { rank: 3, name: 'אתה (שיא אישי)', time: userTimeStr, date: 'היום', isUser: true },
+          { rank: 3, name: 'אתה (שיא תחרותי)', time: userTimeStr, date: 'היום', isUser: true },
           { rank: 4, name: 'גל פרידמן', time: '01:45', date: '30/07' }
         ],
         medium: [
           { rank: 1, name: 'רוני ברק', time: '02:40', date: '02/08' },
-          { rank: 2, name: 'אתה (שיא אישי)', time: userTimeStr, date: 'היום', isUser: true },
+          { rank: 2, name: 'אתה (שיא תחרותי)', time: userTimeStr, date: 'היום', isUser: true },
           { rank: 3, name: 'איתי שגב', time: '03:10', date: '01/08' }
         ],
         hard: [
           { rank: 1, name: 'אורן זהבי', time: '04:15', date: '31/07' },
           { rank: 2, name: 'תמר שפירא', time: '04:50', date: '02/08' },
-          { rank: 3, name: 'אתה (שיא אישי)', time: userTimeStr, date: 'היום', isUser: true }
+          { rank: 3, name: 'אתה (שיא תחרותי)', time: userTimeStr, date: 'היום', isUser: true }
         ]
       };
 
@@ -797,7 +861,7 @@
     }
 
     function saveGameState() {
-      if (!currentDifficulty || !currentBoard.length) return;
+      if (!currentDifficulty || !currentBoard.length || isCompetitiveMode) return;
       
       const serializableNotes = pencilNotes.map(row => 
         row.map(cellSet => Array.from(cellSet))
@@ -850,7 +914,7 @@
           const pauseOverlay = document.getElementById('pause-overlay');
           pauseOverlay.classList.remove('hidden');
           pauseOverlay.classList.add('flex');
-          document.getElementById('pause-btn').innerHTML = `<span>▶️</span><span>המשך</span>`;
+          document.getElementById('action-btn-pause').innerHTML = `<span>▶️</span><span>המשך</span>`;
         }
 
         startTimer(true);
@@ -1146,12 +1210,12 @@
     }
 
     function togglePause() {
-      if (!currentDifficulty) return;
+      if (!currentDifficulty || isCompetitiveMode) return;
       playClickSound();
       isPaused = !isPaused;
 
       const pauseOverlay = document.getElementById('pause-overlay');
-      const pauseBtn = document.getElementById('pause-btn');
+      const pauseBtn = document.getElementById('action-btn-pause');
 
       if (isPaused) {
         pauseOverlay.classList.remove('hidden');
@@ -1170,7 +1234,7 @@
     let hintTimeout = null;
 
     function giveHint() {
-      if (!currentDifficulty || isPaused || !solution.length) return;
+      if (!currentDifficulty || isPaused || isCompetitiveMode || !solution.length) return;
 
       const candidates = [];
       for (let r = 0; r < currentSize; r++) {
@@ -1222,7 +1286,7 @@
     let errorCells = []; 
 
     function setSize(size) {
-      if (currentSize === size) return;
+      if (currentSize === size || isCompetitiveMode) return;
       playClickSound();
       currentSize = size;
       updateSizeUI();
@@ -1250,7 +1314,7 @@
     }
 
     function updatePencilButtonUI() {
-      const btn = document.getElementById('pencil-btn');
+      const btn = document.getElementById('action-btn-pencil');
       if (isPencilMode) {
         btn.className = "bg-indigo-600 text-white font-bold py-2 rounded-xl shadow-inset ring-2 ring-indigo-400 active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5";
       } else {
@@ -1283,6 +1347,7 @@
     }
 
     function createNewGame() {
+      if (isCompetitiveMode && currentBoard.length > 0) return;
       if (!currentDifficulty) currentDifficulty = 'easy';
       if (!currentSize) currentSize = 9;
       updateSizeUI();
@@ -1589,7 +1654,7 @@
     }
 
     function checkErrors() {
-      if (isPaused) return;
+      if (isPaused || isCompetitiveMode) return;
       playClickSound();
       errorCells = [];
       for (let r = 0; r < currentSize; r++) {
