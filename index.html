@@ -36,10 +36,10 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-between p-4 select-none">
 
-  <!-- ========================================== -->
+<!-- ========================================== -->
   <!-- 1. מסך הבית (HOME VIEW)                    -->
   <!-- ========================================== -->
-  <div id="home-view" class="w-full max-w-sm flex flex-col gap-4 my-auto">
+  <div id="home-view" class="w-full max-w-sm flex flex-col gap-4 my-auto mx-auto p-2">
     
     <!-- כותרת וסטטוס שחקן -->
     <header class="text-center flex flex-col items-center gap-2">
@@ -59,63 +59,70 @@
       </div>
     </header>
 
-    <!-- גריד מצבי משחק -->
-    <main class="flex flex-col gap-3">
+    <!-- גריד מצבי משחק (2x2) -->
+    <main class="grid grid-cols-2 gap-3 w-full">
       
-      <!-- כרטיס סודוקו קלאסי -->
-      <div class="bg-white p-4 rounded-2xl shadow-outset flex flex-col gap-3 border border-slate-100">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
+      <!-- 1. ימין למעלה: סודוקו קלאסי -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square text-right">
+        <div>
+          <div class="flex items-center justify-between mb-1">
             <span class="text-2xl">🧩</span>
-            <div>
-              <h2 class="font-extrabold text-slate-800 text-base">סודוקו קלאסי</h2>
-              <p class="text-[11px] text-slate-500">משחק חופשי ללא לחץ</p>
-            </div>
+            <span class="bg-indigo-50 text-indigo-600 font-extrabold text-[9px] px-1.5 py-0.5 rounded-md">3 רמות</span>
           </div>
-          <span class="bg-indigo-50 text-indigo-600 font-bold text-[10px] px-2 py-1 rounded-md">3 רמות</span>
+          <h2 class="font-extrabold text-slate-800 text-sm leading-tight">סודוקו קלאסי</h2>
+          <p class="text-[10px] text-slate-400 mt-0.5">משחק חופשי</p>
         </div>
         
-        <div class="grid grid-cols-3 gap-1.5 mt-1">
-          <button onclick="startClassicGame('easy')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-2 rounded-xl text-xs transition-all active:scale-95">קל</button>
-          <button onclick="startClassicGame('medium')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-2 rounded-xl text-xs transition-all active:scale-95">בינוני</button>
-          <button onclick="startClassicGame('hard')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-2 rounded-xl text-xs transition-all active:scale-95">קשה</button>
+        <div class="grid grid-cols-3 gap-1 mt-2">
+          <button onclick="startClassicGame('easy')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-1.5 rounded-lg text-[10px] transition-all active:scale-95">קל</button>
+          <button onclick="startClassicGame('medium')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-1.5 rounded-lg text-[10px] transition-all active:scale-95">בינוני</button>
+          <button onclick="startClassicGame('hard')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-1.5 rounded-lg text-[10px] transition-all active:scale-95">קשה</button>
         </div>
       </div>
 
-      <!-- כרטיס האתגר היומי -->
-      <div onclick="startDailyChallenge()" class="bg-gradient-to-l from-indigo-600 to-indigo-700 text-white p-4 rounded-2xl shadow-outset flex items-center justify-between cursor-pointer active:scale-98 transition-all">
-        <div class="flex items-center gap-3">
-          <span class="text-3xl">📅</span>
-          <div>
-            <h2 class="font-extrabold text-base">האתגר היומי</h2>
-            <p id="daily-date-text" class="text-[11px] text-indigo-200">חידה ייחודית להיום</p>
-          </div>
+      <!-- 2. משמאל למעלה: נגד השעון -->
+      <div onclick="startCompetitiveMode()" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group">
+        <div class="flex items-center justify-between">
+          <span class="text-2xl group-hover:scale-110 transition-transform">⚡</span>
+          <span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">מהיר</span>
         </div>
-        <button class="bg-white text-indigo-600 font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-md">שחק</button>
+        <div class="my-auto">
+          <h2 class="font-extrabold text-slate-800 text-sm leading-tight">נגד השעון</h2>
+          <p class="text-[10px] text-slate-400 mt-1">3 דקות לפתור</p>
+        </div>
+        <div class="text-left">
+          <span class="text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-1 rounded-lg">שחק ←</span>
+        </div>
       </div>
 
-      <!-- כרטיס מסע השלבים -->
-      <div onclick="startJourneyMode()" class="bg-white p-4 rounded-2xl shadow-outset flex items-center justify-between cursor-pointer active:scale-98 transition-all border border-slate-100">
-        <div class="flex items-center gap-3">
-          <span class="text-3xl">🗺️</span>
-          <div>
-            <h2 class="font-extrabold text-slate-800 text-base">מסע השלבים</h2>
-            <p id="journey-level-text" class="text-[11px] text-slate-500">שלב 1 • 0/100 כוכבים</p>
-          </div>
+      <!-- 3. מימין למטה: האתגר היומי -->
+      <div onclick="startDailyChallenge()" class="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between aspect-square cursor-pointer active:scale-95 transition-all text-right group">
+        <div class="flex items-center justify-between">
+          <span class="text-2xl group-hover:rotate-6 transition-transform">📅</span>
+          <span class="bg-white/20 backdrop-blur-sm text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded-md">יומי</span>
         </div>
-        <span class="text-indigo-600 font-bold text-lg">←</span>
+        <div class="my-auto">
+          <h2 class="font-extrabold text-sm leading-tight">האתגר היומי</h2>
+          <p id="daily-date-text" class="text-[10px] text-indigo-200 mt-1 line-clamp-1">חידה ייחודית להיום</p>
+        </div>
+        <div class="text-left">
+          <span class="bg-white text-indigo-600 font-extrabold text-xs px-2.5 py-1 rounded-lg shadow-sm">שחק</span>
+        </div>
       </div>
 
-      <!-- כרטיס מצב תחרותי -->
-      <div onclick="startCompetitiveMode()" class="bg-white p-4 rounded-2xl shadow-outset flex items-center justify-between cursor-pointer active:scale-98 transition-all border border-slate-100">
-        <div class="flex items-center gap-3">
-          <span class="text-3xl">⚡</span>
-          <div>
-            <h2 class="font-extrabold text-slate-800 text-base">נגד השעון</h2>
-            <p class="text-[11px] text-slate-500">3 דקות לפתור • טעויות מורידות זמן</p>
-          </div>
+      <!-- 4. משמאל למטה: מסע השלבים -->
+      <div onclick="startJourneyMode()" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group">
+        <div class="flex items-center justify-between">
+          <span class="text-2xl group-hover:scale-110 transition-transform">🗺️</span>
+          <span class="bg-slate-100 text-slate-600 font-extrabold text-[9px] px-1.5 py-0.5 rounded-md">שלבים</span>
         </div>
-        <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-md">מהיר</span>
+        <div class="my-auto">
+          <h2 class="font-extrabold text-slate-800 text-sm leading-tight">מסע השלבים</h2>
+          <p id="journey-level-text" class="text-[10px] text-slate-400 mt-1 line-clamp-1">שלב 1 • 0/100 כוכבים</p>
+        </div>
+        <div class="text-left">
+          <span class="text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-1 rounded-lg">למפה ←</span>
+        </div>
       </div>
 
     </main>
