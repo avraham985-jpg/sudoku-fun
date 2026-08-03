@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Competitive & Daily Leaderboards</title>
+  <title>Sudoku Fun - Daily Scoring & Competitive Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -88,7 +88,7 @@
         </div>
       </div>
 
-      <!-- 2. משמאל למעלה: מצב תחרותי (עם בחירת רמה ישירה בכרטיסייה) -->
+      <!-- 2. משמאל למעלה: מצב תחרותי -->
       <div class="bg-white p-3 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square text-right group">
         <div class="flex items-center justify-between">
           <span class="text-xl group-hover:scale-110 transition-transform">⚡</span>
@@ -100,7 +100,6 @@
           <p class="text-[9px] text-slate-400 mt-0.5">9x9 • ללא עזרים ורמזים</p>
         </div>
 
-        <!-- בחירת רמה ישירות מהכרטיסייה -->
         <div class="flex flex-col gap-1 w-full">
           <span class="text-[9px] text-slate-400 font-bold">בחר רמה לתחרות:</span>
           <div class="grid grid-cols-3 gap-1">
@@ -154,7 +153,6 @@
   <!-- ========================================== -->
   <div id="leaderboard-view" class="w-full max-w-sm hidden flex-col items-center justify-between my-auto gap-3 p-1">
     
-    <!-- כותרת וחזרה לבית -->
     <header class="w-full flex items-center justify-between px-1">
       <button onclick="switchToHome()" class="bg-white text-indigo-600 font-bold px-3 py-1.5 rounded-xl shadow-outset-sm active:scale-95 transition-all text-xs flex items-center gap-1">
         <span>🏠</span> <span>בית</span>
@@ -247,7 +245,6 @@
   <!-- ========================================== -->
   <div id="game-view" class="w-full max-w-sm hidden flex-col items-center justify-between my-auto gap-2">
     
-    <!-- כותרת, חזרה לבית, טיימר, בוחר גודל לוח ובוחר רמות קושי -->
     <header class="w-full text-center flex flex-col items-center gap-2">
       <div class="w-full flex items-center justify-between px-1">
         <button onclick="switchToHome()" class="bg-white text-indigo-600 font-bold px-3 py-1 rounded-xl shadow-outset-sm active:scale-95 transition-all text-xs flex items-center gap-1">
@@ -256,7 +253,6 @@
         
         <h1 id="game-title-display" class="text-xl font-extrabold text-indigo-600 tracking-tight">סודוקו קלאסי</h1>
         
-        <!-- תצוגת טיימר -->
         <div class="bg-slate-200 px-3 py-1 rounded-xl shadow-inset flex items-center gap-1.5 font-mono text-sm font-bold text-slate-700">
           <span>⏱️</span>
           <span id="timer-display">00:00</span>
@@ -276,7 +272,7 @@
         <button onclick="setSize(12)" id="btn-size-12" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">12x12</button>
       </div>
       
-      <!-- בחירת רמת קושי (מוסתר לחלוטין במצב תחרותי) -->
+      <!-- בחירת רמת קושי -->
       <div id="difficulty-selector-bar" class="flex bg-slate-200/80 p-1.5 rounded-2xl w-full justify-between gap-1.5 shadow-inset border border-slate-300/50">
         <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">קל</button>
         <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">בינוני</button>
@@ -322,7 +318,6 @@
       <!-- מקלדת וכפתורים -->
       <div class="w-full flex flex-col gap-2 mt-1">
         
-        <!-- כפתורי פעולות (מוסתרים/מנוטרלים במצב תחרותי) -->
         <div class="grid grid-cols-3 gap-1.5">
           <button id="action-btn-new" onclick="createNewGame()" class="bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>🔄</span> <span>חדש</span>
@@ -344,12 +339,10 @@
           </button>
         </div>
 
-        <!-- מקלדת חכמה דינמית -->
         <div id="keyboard" class="w-full grid grid-cols-5 gap-2">
           <!-- הוזן מ-JS -->
         </div>
         
-        <!-- כפתור פתור אוטומטית (Dev Mode) -->
         <button id="auto-solve-btn" onclick="autoSolve()" class="hidden w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-0.5">
           ⚡ פתור אוטומטית (מצב מפתח בלבד)
         </button>
@@ -368,6 +361,16 @@
       <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
       <p class="text-sm text-slate-600">פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">00:00</span>!</p>
       
+      <!-- פירוט ניקוד יומי (מוצג רק באתגר היומי) -->
+      <div id="daily-score-breakdown" class="hidden w-full bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex-col gap-1.5 text-xs text-right">
+        <div class="font-extrabold text-indigo-800 text-center border-b border-indigo-200/60 pb-1">🎯 ניקוד האתגר היומי</div>
+        <div class="flex justify-between text-slate-600"><span>בסיס פתרון:</span><span id="score-base" class="font-bold">100</span></div>
+        <div class="flex justify-between text-slate-600"><span>בונוס מהירות:</span><span id="score-speed" class="font-bold text-emerald-600">+0</span></div>
+        <div class="flex justify-between text-slate-600"><span>בונוס רצף (🔥):</span><span id="score-streak" class="font-bold text-amber-600">+0</span></div>
+        <div id="row-milestone" class="hidden flex justify-between text-slate-600 bg-amber-100 px-1.5 py-0.5 rounded-md font-bold text-amber-900"><span>🎉 אבן דרך שבועית!</span><span id="score-milestone">+100</span></div>
+        <div class="flex justify-between font-black text-indigo-700 text-sm border-t border-indigo-200/60 pt-1 mt-0.5"><span>סה"כ ליום זה:</span><span id="score-total">0</span></div>
+      </div>
+
       <div id="new-record-badge" class="hidden bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-full border border-amber-300">
         🎉 שיא חדש נקבע היום!
       </div>
@@ -384,13 +387,25 @@
   <!-- ========================================== -->
   <script>
     let isCompetitiveMode = false;
+    let isDailyMode = false;
+
+    // --- חישוב ניקוד באתגר היומי המצטבר ---
+    function calculateDailyScore(seconds, streak) {
+      const base = 100;
+      const speedBonus = Math.max(10, 50 - Math.floor(seconds / 10));
+      const streakBonus = streak * 10;
+      const milestoneBonus = (streak > 0 && streak % 7 === 0) ? 100 : 0;
+      
+      const total = base + speedBonus + streakBonus + milestoneBonus;
+      return { total, base, speedBonus, streakBonus, milestoneBonus };
+    }
 
     // --- מיפוי גודלי בלוקים פנימיים ---
     function getBoxDimensions(size) {
       if (size === 4) return { boxRows: 2, boxCols: 2 };
       if (size === 6) return { boxRows: 2, boxCols: 3 };
       if (size === 12) return { boxRows: 3, boxCols: 4 };
-      return { boxRows: 3, boxCols: 3 }; // 9x9
+      return { boxRows: 3, boxCols: 3 };
     }
 
     // --- זיהוי מצב מפתח (Dev Mode) ---
@@ -427,6 +442,8 @@
     function switchToHome() {
       stopTimer();
       saveGameState();
+      isCompetitiveMode = false;
+      isDailyMode = false;
       document.getElementById('game-view').classList.add('hidden');
       document.getElementById('game-view').classList.remove('flex');
       document.getElementById('leaderboard-view').classList.add('hidden');
@@ -438,6 +455,8 @@
     function switchToLeaderboards() {
       stopTimer();
       saveGameState();
+      isCompetitiveMode = false;
+      isDailyMode = false;
       document.getElementById('home-view').classList.add('hidden');
       document.getElementById('game-view').classList.add('hidden');
       document.getElementById('game-view').classList.remove('flex');
@@ -458,6 +477,7 @@
 
     function startClassicGame(diff = 'easy', size = 9) {
       isCompetitiveMode = false;
+      isDailyMode = false;
       document.getElementById('game-title-display').innerText = "סודוקו קלאסי";
       document.getElementById('difficulty-selector-bar').classList.remove('hidden');
       document.getElementById('size-selector-bar').classList.remove('hidden');
@@ -469,17 +489,44 @@
 
     function startCompetitiveMode(diff = 'easy') {
       isCompetitiveMode = true;
+      isDailyMode = false;
+      currentBoard = []; 
+      isPaused = false;
+      secondsElapsed = 0;
+
       document.getElementById('game-title-display').innerText = `מצב תחרותי (${getDifficultyName(diff)}) ⚡`;
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
       document.getElementById('size-selector-bar').classList.add('hidden');
-      currentSize = 9; // strictly 9x9
+      
+      currentSize = 9;
       updateSizeUI();
-      setDifficulty(diff || 'easy');
+      
+      currentDifficulty = diff || 'easy';
+      updateDifficultyUI();
+      updateBestTimeDisplay();
+
+      document.getElementById('start-overlay').classList.add('hidden');
+      document.getElementById('pause-overlay').classList.add('hidden');
+      document.getElementById('pause-overlay').classList.remove('flex');
+
+      const generated = generateSudoku(currentDifficulty, currentSize);
+      initialPuzzle = generated.puzzle;
+      solution = generated.solution;
+      currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
+      pencilNotes = Array.from({ length: currentSize }, () => Array.from({ length: currentSize }, () => new Set()));
+      
+      selectedCell = null;
+      errorCells = [];
+      hintCell = null;
+
+      startTimer();
+      renderUI();
       switchToGame();
     }
 
     function startDailyChallenge() {
       isCompetitiveMode = false;
+      isDailyMode = true;
       document.getElementById('game-title-display').innerText = "האתגר היומי 📅";
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
       document.getElementById('size-selector-bar').classList.add('hidden');
@@ -491,6 +538,7 @@
 
     function startJourneyMode() {
       isCompetitiveMode = false;
+      isDailyMode = false;
       document.getElementById('game-title-display').innerText = "מסע השלבים - שלב 1 🗺️";
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
       document.getElementById('size-selector-bar').classList.add('hidden');
@@ -649,15 +697,16 @@
 
       const container = document.getElementById('daily-leaderboard-list');
       container.innerHTML = '';
-      const userStreak = localStorage.getItem('sudoku_streak') || 1;
+      const userStreak = parseInt(localStorage.getItem('sudoku_streak') || 1);
+      const userCumScore = parseInt(localStorage.getItem('sudoku_daily_cumulative_score') || 0);
 
       if (subTab === 'today') {
         const mockToday = [
-          { rank: 1, name: 'דניאל קליין', time: '01:42', score: '1,280' },
-          { rank: 2, name: 'מיכל שורץ', time: '01:55', score: '1,190' },
-          { rank: 3, name: 'יובל גולן', time: '02:08', score: '1,150' },
-          { rank: 4, name: 'אתה (היום)', time: '02:35', score: '940', isUser: true },
-          { rank: 5, name: 'עדי מזרחי', time: '02:41', score: '890' }
+          { rank: 1, name: 'דניאל קליין', time: '01:42', score: '188' },
+          { rank: 2, name: 'מיכל שורץ', time: '01:55', score: '178' },
+          { rank: 3, name: 'יובל גולן', time: '02:08', score: '168' },
+          { rank: 4, name: 'אתה (היום)', time: '02:35', score: '148', isUser: true },
+          { rank: 5, name: 'עדי מזרחי', time: '02:41', score: '138' }
         ];
 
         mockToday.forEach(item => {
@@ -680,16 +729,18 @@
         });
       } else {
         const mockCumulative = [
-          { rank: 1, name: 'יובל גולן', streak: 28, totalScore: '34,200' },
-          { rank: 2, name: 'דניאל קליין', streak: 21, totalScore: '28,900' },
-          { rank: 3, name: 'אתה', streak: parseInt(userStreak), totalScore: '14,500', isUser: true },
-          { rank: 4, name: 'מיכל שורץ', streak: 12, totalScore: '12,100' }
+          { rank: 1, name: 'יובל גולן', streak: 28, totalScore: '4,850' },
+          { rank: 2, name: 'דניאל קליין', streak: 21, totalScore: '3,920' },
+          { rank: 3, name: 'אתה', streak: userStreak, totalScore: userCumScore > 0 ? userCumScore.toLocaleString() : '1,450', isUser: true },
+          { rank: 4, name: 'מיכל שורץ', streak: 12, totalScore: '1,820' }
         ];
 
-        mockCumulative.forEach(item => {
+        mockCumulative.sort((a, b) => parseInt(b.totalScore.replace(/,/g, '')) - parseInt(a.totalScore.replace(/,/g, '')));
+
+        mockCumulative.forEach((item, idx) => {
           const row = document.createElement('div');
           const bgClass = item.isUser ? 'bg-indigo-50 border-2 border-indigo-400 font-bold' : 'bg-slate-50 border border-slate-100';
-          const rankBadge = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`;
+          const rankBadge = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
 
           row.className = `p-2 rounded-xl flex items-center justify-between ${bgClass}`;
           row.innerHTML = `
@@ -699,7 +750,7 @@
             </div>
             <div class="flex items-center gap-2.5 text-[11px]">
               <span class="text-amber-700 font-extrabold bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">🔥 רצף ${item.streak}</span>
-              <span class="font-extrabold text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-md">${item.totalScore}</span>
+              <span class="font-extrabold text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-md">${item.totalScore} נקו'</span>
             </div>
           `;
           container.appendChild(row);
@@ -1436,8 +1487,39 @@
       
       const isNewRecord = checkAndUpdateBestTime(currentDifficulty, secondsElapsed);
       const recordBadge = document.getElementById('new-record-badge');
+      const dailyBreakdown = document.getElementById('daily-score-breakdown');
       
-      if (isNewRecord) {
+      if (isDailyMode) {
+        const streak = parseInt(localStorage.getItem('sudoku_streak') || 1);
+        const scoreData = calculateDailyScore(secondsElapsed, streak);
+        
+        document.getElementById('score-base').innerText = scoreData.base;
+        document.getElementById('score-speed').innerText = `+${scoreData.speedBonus}`;
+        document.getElementById('score-streak').innerText = `+${scoreData.streakBonus}`;
+        
+        const rowMilestone = document.getElementById('row-milestone');
+        if (scoreData.milestoneBonus > 0) {
+          rowMilestone.classList.remove('hidden');
+          rowMilestone.classList.add('flex');
+          document.getElementById('score-milestone').innerText = `+${scoreData.milestoneBonus}`;
+        } else {
+          rowMilestone.classList.add('hidden');
+          rowMilestone.classList.remove('flex');
+        }
+
+        document.getElementById('score-total').innerText = scoreData.total;
+        dailyBreakdown.classList.remove('hidden');
+        dailyBreakdown.classList.add('flex');
+
+        // עדכון ניקוד מצטבר ב-LocalStorage
+        const currentCum = parseInt(localStorage.getItem('sudoku_daily_cumulative_score') || 0);
+        localStorage.setItem('sudoku_daily_cumulative_score', currentCum + scoreData.total);
+      } else {
+        dailyBreakdown.classList.add('hidden');
+        dailyBreakdown.classList.remove('flex');
+      }
+
+      if (isNewRecord && !isDailyMode) {
         recordBadge.classList.remove('hidden');
       } else {
         recordBadge.classList.add('hidden');
