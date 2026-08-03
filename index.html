@@ -63,7 +63,7 @@
     <main class="grid grid-cols-2 gap-3 w-full">
       
       <!-- 1. ימין למעלה: סודוקו קלאסי -->
-      <div onclick="startClassicGame(currentDifficulty || 'easy')" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group overflow-hidden">
+      <div onclick="startClassicGame('easy')" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group overflow-hidden">
         
         <div class="flex items-start justify-between">
           <div>
@@ -168,19 +168,19 @@
         </div>
       </div>
 
-      <!-- בחירת גודל לוח -->
-      <div id="size-selector-bar" class="flex bg-slate-200 p-1 rounded-xl w-full justify-between gap-1 shadow-inset">
-        <button onclick="setSize(4)" id="btn-size-4" class="flex-1 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">4x4</button>
-        <button onclick="setSize(6)" id="btn-size-6" class="flex-1 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">6x6</button>
-        <button onclick="setSize(9)" id="btn-size-9" class="flex-1 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">9x9</button>
-        <button onclick="setSize(12)" id="btn-size-12" class="flex-1 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">12x12</button>
+      <!-- בחירת גודל לוח (עם הפרדה ויזואלית מודגשת) -->
+      <div id="size-selector-bar" class="flex bg-slate-200/80 p-1.5 rounded-2xl w-full justify-between gap-1.5 shadow-inset border border-slate-300/50">
+        <button onclick="setSize(4)" id="btn-size-4" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">4x4</button>
+        <button onclick="setSize(6)" id="btn-size-6" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">6x6</button>
+        <button onclick="setSize(9)" id="btn-size-9" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">9x9</button>
+        <button onclick="setSize(12)" id="btn-size-12" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">12x12</button>
       </div>
       
-      <!-- בחירת רמת קושי -->
-      <div id="difficulty-selector-bar" class="flex bg-slate-200 p-1 rounded-xl w-full justify-between gap-1 shadow-inset">
-        <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קל</button>
-        <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">בינוני</button>
-        <button onclick="setDifficulty('hard')" id="btn-hard" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all">קשה</button>
+      <!-- בחירת רמת קושי (עם הפרדה ויזואלית מודגשת) -->
+      <div id="difficulty-selector-bar" class="flex bg-slate-200/80 p-1.5 rounded-2xl w-full justify-between gap-1.5 shadow-inset border border-slate-300/50">
+        <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">קל</button>
+        <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">בינוני</button>
+        <button onclick="setDifficulty('hard')" id="btn-hard" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">קשה</button>
       </div>
 
       <!-- תצוגת שיא אישי ותאריך -->
@@ -354,13 +354,13 @@
       });
     }
 
-    function startClassicGame(diff) {
+    function startClassicGame(diff = 'easy') {
       document.getElementById('game-title-display').innerText = "סודוקו קלאסי";
       document.getElementById('difficulty-selector-bar').classList.remove('hidden');
       document.getElementById('size-selector-bar').classList.remove('hidden');
-      if (!currentSize) currentSize = 9;
+      currentSize = 9; // ברירת מחדל 9x9
       updateSizeUI();
-      setDifficulty(diff || currentDifficulty || 'easy');
+      setDifficulty(diff || 'easy'); // ברירת מחדל קל
       switchToGame();
     }
 
@@ -471,7 +471,7 @@
         if (!state.currentDifficulty || !state.initialPuzzle.length) return false;
         
         currentSize = state.currentSize || 9;
-        currentDifficulty = state.currentDifficulty;
+        currentDifficulty = state.currentDifficulty || 'easy';
         initialPuzzle = state.initialPuzzle;
         solution = state.solution;
         currentBoard = state.currentBoard;
@@ -855,10 +855,10 @@
       }, 3000);
     }
 
-    // --- מצב המשחק ---
+    // --- מצב המשחק (דיפולט: 9x9 ו-קל) ---
 
     let currentSize = 9;
-    let currentDifficulty = null; 
+    let currentDifficulty = 'easy'; 
     let initialPuzzle = [];
     let solution = [];
     let currentBoard = [];
@@ -880,9 +880,9 @@
         const btn = document.getElementById(`btn-size-${s}`);
         if (btn) {
           if (s === currentSize) {
-            btn.className = "flex-1 py-1 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition-all";
+            btn.className = "flex-1 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-md transition-all scale-[1.02] z-10";
           } else {
-            btn.className = "flex-1 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all";
+            btn.className = "flex-1 py-1.5 text-xs font-bold rounded-xl bg-white/70 text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-300/70 shadow-sm transition-all";
           }
         }
       });
@@ -918,10 +918,12 @@
     function updateDifficultyUI() {
       ['easy', 'medium', 'hard'].forEach(d => {
         const btn = document.getElementById(`btn-${d}`);
-        if (d === currentDifficulty) {
-          btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition-all";
-        } else {
-          btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 transition-all";
+        if (btn) {
+          if (d === currentDifficulty) {
+            btn.className = "flex-1 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 text-white shadow-md transition-all scale-[1.02] z-10";
+          } else {
+            btn.className = "flex-1 py-1.5 text-xs font-bold rounded-xl bg-white/70 text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-300/70 shadow-sm transition-all";
+          }
         }
       });
     }
@@ -1047,6 +1049,7 @@
       renderKeyboard();
       checkDevModeUI();
       updateSizeUI();
+      updateDifficultyUI();
     }
 
     function renderBoard() {
