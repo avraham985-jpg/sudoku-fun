@@ -62,21 +62,35 @@
     <!-- גריד מצבי משחק (2x2) -->
     <main class="grid grid-cols-2 gap-3 w-full">
       
-      <!-- 1. ימין למעלה: סודוקו קלאסי -->
-      <div class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square text-right">
+      <!-- 1. ימין למעלה: סודוקו קלאסי (לחיץ כולו + תצוגת שיאים) -->
+      <div onclick="startClassicGame(currentDifficulty || 'easy')" class="bg-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between border border-slate-100 aspect-square cursor-pointer active:scale-95 transition-all text-right group">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <span class="text-2xl">🧩</span>
-            <span class="bg-indigo-50 text-indigo-600 font-extrabold text-[9px] px-1.5 py-0.5 rounded-md">3 רמות</span>
+            <span class="text-2xl group-hover:scale-110 transition-transform">🧩</span>
+            <span class="bg-indigo-50 text-indigo-600 font-extrabold text-[9px] px-1.5 py-0.5 rounded-md">שיאים</span>
           </div>
           <h2 class="font-extrabold text-slate-800 text-sm leading-tight">סודוקו קלאסי</h2>
           <p class="text-[10px] text-slate-400 mt-0.5">משחק חופשי</p>
         </div>
         
-        <div class="grid grid-cols-3 gap-1 mt-2">
-          <button onclick="startClassicGame('easy')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-1.5 rounded-lg text-[10px] transition-all active:scale-95">קל</button>
-          <button onclick="startClassicGame('medium')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-1.5 rounded-lg text-[10px] transition-all active:scale-95">בינוני</button>
-          <button onclick="startClassicGame('hard')" class="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold py-1.5 rounded-lg text-[10px] transition-all active:scale-95">קשה</button>
+        <!-- תצוגת שיאים לפי רמות -->
+        <div class="bg-slate-50 p-1.5 rounded-xl border border-slate-100 text-[10px] font-medium flex flex-col gap-0.5 my-auto">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">קל:</span>
+            <span id="home-best-easy" class="font-bold font-mono text-indigo-600">--:--</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">בינוני:</span>
+            <span id="home-best-medium" class="font-bold font-mono text-indigo-600">--:--</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">קשה:</span>
+            <span id="home-best-hard" class="font-bold font-mono text-indigo-600">--:--</span>
+          </div>
+        </div>
+
+        <div class="text-left">
+          <span class="text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-1 rounded-lg">שחק ←</span>
         </div>
       </div>
 
@@ -306,12 +320,27 @@
       const stars = localStorage.getItem('sudoku_stars') || 0;
       document.getElementById('streak-display').innerText = `רצף: ${streak} ימים`;
       document.getElementById('stars-display').innerText = `כוכבים: ${stars}`;
+
+      // עדכון תצוגת השיאים בכרטיס סודוקו קלאסי
+      const bestTimes = getBestTimes();
+      ['easy', 'medium', 'hard'].forEach(diff => {
+        const el = document.getElementById(`home-best-${diff}`);
+        if (el) {
+          if (bestTimes[diff]) {
+            const mins = Math.floor(bestTimes[diff].seconds / 60).toString().padStart(2, '0');
+            const secs = (bestTimes[diff].seconds % 60).toString().padStart(2, '0');
+            el.innerText = `${mins}:${secs}`;
+          } else {
+            el.innerText = '--:--';
+          }
+        }
+      });
     }
 
     function startClassicGame(diff) {
       document.getElementById('game-title-display').innerText = "סודוקו קלאסי";
       document.getElementById('difficulty-selector-bar').classList.remove('hidden');
-      setDifficulty(diff);
+      setDifficulty(diff || currentDifficulty || 'easy');
       switchToGame();
     }
 
