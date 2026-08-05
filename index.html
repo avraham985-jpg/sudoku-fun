@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Fun - Daily Challenges & Logic Engine</title>
+  <title>Sudoku Fun - Perfect Generator & Balanced Logic Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -22,7 +22,6 @@
   <style>
     .border-b-thick { border-bottom: 2px solid #64748b !important; }
     .border-l-thick { border-left: 2px solid #64748b !important; }
-    .cell-diagonal { background-color: #f1f5f9 !important; }
     
     .cell-tile { transition: all 0.1s ease-out; }
     .cell-tile:active { transform: scale(0.97) translateY(1px); }
@@ -105,7 +104,7 @@
         </div>
       </div>
 
-      <!-- 3. האתגר היומי (פותח כעת את פופ-אפ ההסבר) -->
+      <!-- 3. האתגר היומי -->
       <div onclick="openDailyIntroModal()" class="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white p-3.5 rounded-2xl shadow-outset flex flex-col justify-between aspect-square cursor-pointer active:scale-95 transition-all text-right group">
         <div class="flex items-center justify-between">
           <span class="text-2xl group-hover:rotate-6 transition-transform">📅</span>
@@ -239,7 +238,7 @@
         <span>⚡</span> <span id="banner-text">מצב תחרותי - ללא רמזים, עזרים או השהיה!</span>
       </div>
 
-      <!-- בחירת גודל לוח (מוסתר באתגר יומי/תחרותי) -->
+      <!-- בחירת גודל לוח -->
       <div id="size-selector-bar" class="flex bg-slate-200/80 p-1.5 rounded-2xl w-full justify-between gap-1.5 shadow-inset border border-slate-300/50">
         <button onclick="setSize(4)" id="btn-size-4" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">4x4</button>
         <button onclick="setSize(6)" id="btn-size-6" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">6x6</button>
@@ -247,7 +246,7 @@
         <button onclick="setSize(12)" id="btn-size-12" class="flex-1 py-1 text-xs font-bold rounded-xl transition-all">12x12</button>
       </div>
       
-      <!-- בחירת רמת קושי (מוסתר באתגר יומי/תחרותי) -->
+      <!-- בחירת רמת קושי -->
       <div id="difficulty-selector-bar" class="flex bg-slate-200/80 p-1.5 rounded-2xl w-full justify-between gap-1.5 shadow-inset border border-slate-300/50">
         <button onclick="setDifficulty('easy')" id="btn-easy" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">קל</button>
         <button onclick="setDifficulty('medium')" id="btn-medium" class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all">בינוני</button>
@@ -310,7 +309,6 @@
 
         <div id="keyboard" class="w-full grid grid-cols-5 gap-2"></div>
         
-        <!-- כפתור פתרון אוטומטי (נשאר פעיל ב-Dev Mode גם באתגר היומי!) -->
         <button id="auto-solve-btn" onclick="autoSolve()" class="hidden w-full bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 font-bold py-1.5 rounded-lg border border-emerald-200 text-xs text-center transition-all mt-0.5">
           ⚡ פתור אוטומטית (מצב מפתח בלבד)
         </button>
@@ -341,11 +339,10 @@
       <div id="dev-challenge-tester" class="hidden bg-amber-50 p-2 rounded-xl border border-amber-200 text-xs flex-col gap-1">
         <span class="font-extrabold text-amber-900 flex items-center gap-1">🧪 מצב מפתח - בחן אתגר:</span>
         <select id="dev-challenge-select" onchange="selectDevChallenge(this.value)" class="w-full p-1 bg-white border border-amber-300 rounded-lg font-bold text-xs text-slate-800">
-          <!-- מוזן דינמית -->
         </select>
       </div>
 
-      <!-- פרטי האתגר מועברים דינמית -->
+      <!-- פרטי האתגר -->
       <div class="bg-indigo-50/70 p-3 rounded-2xl border border-indigo-100 flex flex-col gap-2">
         <div class="flex items-center justify-between">
           <span class="font-black text-indigo-900 text-sm" id="intro-challenge-name">---</span>
@@ -423,7 +420,7 @@
     let isCompetitiveMode = false;
     let isDailyMode = false;
 
-    // --- קטלוג אתגרים יומיים מורחב (בנק של אתגרים לבחירה/מחזור) ---
+    // --- קטלוג אתגרים יומיים ---
     const DAILY_CHALLENGES_CATALOG = [
       {
         id: 'x_sudoku_9x9',
@@ -474,7 +471,6 @@
     let dailyHintsUsed = 0;
     const MAX_DAILY_HINTS = 3;
 
-    // חישוב Seed יומי דינמי
     function getDailySeed() {
       const today = new Date();
       return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
@@ -498,7 +494,7 @@
         speedBonus = Math.max(10, 60 - Math.floor(seconds / 10));
       }
 
-      const hintsPenalty = hintsUsed * 30; // 30 נקודות קנס לכל רמז
+      const hintsPenalty = hintsUsed * 30;
       const streakBonus = streak * 10;
       const milestoneBonus = (streak > 0 && streak % 7 === 0) ? 100 : 0;
       
@@ -581,7 +577,7 @@
       document.getElementById('stars-display').innerText = `כוכבים: ${stars}`;
     }
 
-    // --- ניהול מודאל הסבר לאתגר היומי (DAILY INTRO MODAL) ---
+    // --- ניהול מודאל הסבר לאתגר היומי ---
     function openDailyIntroModal() {
       currentDailyConfig = getTodayChallengeConfig();
       renderDailyIntroModalDetails();
@@ -765,10 +761,9 @@
         sizeBar.classList.add('hidden');
 
         pauseBtn.classList.remove('opacity-40', 'pointer-events-none');
-        checkBtn.classList.add('opacity-40', 'pointer-events-none'); // ביטול בדיקה
-        newBtn.classList.add('opacity-40', 'pointer-events-none');   // ביטול לוח חדש
+        checkBtn.classList.add('opacity-40', 'pointer-events-none');
+        newBtn.classList.add('opacity-40', 'pointer-events-none');
         
-        // הגבלת רמזים
         const remainingHints = MAX_DAILY_HINTS - dailyHintsUsed;
         hintText.innerText = `רמז (${remainingHints}/${MAX_DAILY_HINTS})`;
         if (remainingHints <= 0) {
@@ -777,7 +772,6 @@
           hintBtn.classList.remove('opacity-40', 'pointer-events-none');
         }
 
-        // אילוץ ללא הערות
         if (currentDailyConfig && currentDailyConfig.disablePencil) {
           pencilBtn.classList.add('opacity-40', 'pointer-events-none');
         } else {
@@ -797,7 +791,7 @@
       }
     }
 
-    // --- ניהול מסך טבלאות שיאים (LEADERBOARDS ENGINE) ---
+    // --- ניהול מסך טבלאות שיאים ---
     let currentLbTab = 'personal';
     let currentLbPersonalSize = 9;
     let currentLbCompDiff = 'easy';
@@ -1251,12 +1245,10 @@
     function isSafe(board, row, col, num, size = currentSize) {
       const { boxRows, boxCols } = getBoxDimensions(size);
       
-      // בדיקת שורה ועמודה
       for (let x = 0; x < size; x++) {
         if (board[row][x] === num || board[x][col] === num) return false;
       }
 
-      // בדיקת בלוק
       let startRow = row - (row % boxRows);
       let startCol = col - (col % boxCols);
       for (let i = 0; i < boxRows; i++) {
@@ -1265,14 +1257,13 @@
         }
       }
 
-      // בדיקת אלכסונים (אם מוגדר באתגר היומי)
       if (isDailyMode && currentDailyConfig && currentDailyConfig.hasDiagonals && size === 9) {
-        if (row === col) { // אלכסון ראשי ↘
+        if (row === col) {
           for (let i = 0; i < size; i++) {
             if (board[i][i] === num) return false;
           }
         }
-        if (row + col === size - 1) { // אלכסון משני ↙
+        if (row + col === size - 1) {
           for (let i = 0; i < size; i++) {
             if (board[i][size - 1 - i] === num) return false;
           }
@@ -1518,7 +1509,7 @@
       saveGameState();
     }
 
-    // --- ניהול רמזים (עם הגבלה של 3 באתגר היומי) ---
+    // --- ניהול רמזים ---
     let hintCell = null;
     let hintTimeout = null;
 
@@ -1669,7 +1660,6 @@
       saveGameState();
     }
 
-    // פתרון אוטומטי ב-Dev Mode (נשאר זמין תמיד ב-Dev Mode גם באתגר היומי!)
     function autoSolve() {
       if (!solution || solution.length === 0) return;
       playClickSound();
@@ -1823,11 +1813,6 @@
           if ((r + 1) % boxRows === 0 && r < currentSize - 1) classes.push('border-b-thick');
           if ((c + 1) % boxCols === 0 && c < currentSize - 1) classes.push('border-l-thick');
 
-          // הצללה עדינה לאלכסונים באתגר אלכסונים
-          if (isDailyMode && currentDailyConfig && currentDailyConfig.hasDiagonals && (r === c || r + c === currentSize - 1)) {
-            classes.push('cell-diagonal');
-          }
-
           const isFixed = displayPuzzle[r][c] !== 0;
           const val = displayBoard[r][c];
 
@@ -1836,20 +1821,23 @@
           const isRelated = selectedCell && (selectedCell.row === r || selectedCell.col === c || (Math.floor(selectedCell.row / boxRows) === Math.floor(r / boxRows) && Math.floor(selectedCell.col / boxCols) === Math.floor(c / boxCols)));
           const isSameValue = selectedCell && val !== 0 && displayBoard[selectedCell.row][selectedCell.col] === val;
           const isError = errorCells.some(e => e.row === r && e.col === c);
+          const isDiagonal = isDailyMode && currentDailyConfig && currentDailyConfig.hasDiagonals && (r === c || r + c === currentSize - 1);
 
           if (isHint) {
-            classes.push('bg-amber-300', 'text-amber-950', 'font-black', 'ring-4', 'ring-amber-500', 'scale-105', 'z-10', 'animate-pulse');
+            classes.push('bg-amber-300', 'text-amber-950', 'font-black', 'ring-4', 'ring-amber-500', 'scale-105', 'z-20', 'animate-pulse');
           } else if (isError && isSelected) {
-            classes.push('bg-rose-500', 'text-white', 'font-bold', 'ring-2', 'ring-rose-700', 'error-animate');
+            classes.push('bg-rose-500', 'text-white', 'font-bold', 'ring-2', 'ring-rose-700', 'error-animate', 'z-20');
           } else if (isError) {
             classes.push('bg-rose-100', 'text-rose-700', 'shadow-outset-sm', 'border-2', 'border-rose-400', 'error-animate');
           } else if (isSelected) {
-            classes.push('bg-indigo-600', 'text-white', 'font-bold', 'shadow-inset');
+            classes.push('bg-indigo-600', 'text-white', 'font-bold', 'shadow-inset', 'z-20');
           } else if (isSameValue) {
             classes.push('bg-indigo-100', 'text-indigo-900', 'font-bold', 'shadow-outset-sm');
           } else if (isRelated) {
             classes.push('bg-slate-50', 'shadow-inset');
-          } else if (!isDailyMode || !currentDailyConfig.hasDiagonals) {
+          } else if (isDiagonal) {
+            classes.push('bg-indigo-50/90', 'text-indigo-950', 'shadow-outset', 'ring-1', 'ring-indigo-300/70', 'z-10');
+          } else {
             classes.push('bg-white', 'shadow-outset-sm');
           }
 
