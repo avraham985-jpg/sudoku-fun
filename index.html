@@ -481,7 +481,7 @@
         id: 'no_pencil_9x9',
         name: 'אימון הזיכרון 🧠',
         size: 9,
-        difficulty: 'medium', // עודכן מ-easy ל-medium
+        difficulty: 'hard', // קושי קבוע ברמה קשה למניעת לוחות קלים
         disablePencil: true,
         description: 'אתגר ללא הערות: מצב ה-Pencil מבוטל ליום זה. החזק את האפשרויות בראש!',
         baseScore: 130
@@ -582,7 +582,6 @@
       stopTimer();
       saveGameState();
 
-      // איפוס מוחלט של זיכרון ה-Timer והמשתנים כדי למנוע זליגה
       secondsElapsed = 0;
       dailyHintsUsed = 0;
       dailyErrorsMade = 0;
@@ -760,11 +759,16 @@
     function startDailyChallenge() {
       isCompetitiveMode = false;
       isDailyMode = true;
-      secondsElapsed = 0;
       
       const config = currentDailyConfig || getTodayChallengeConfig();
       currentSize = config.size || 9;
-      currentDifficulty = config.difficulty || 'medium';
+      
+      // אימון הזיכרון מקבל תמיד רמה קשה
+      if (config.id === 'no_pencil_9x9') {
+        currentDifficulty = 'hard';
+      } else {
+        currentDifficulty = config.difficulty || 'medium';
+      }
 
       document.getElementById('game-title-display').innerText = `${config.name}`;
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
@@ -773,16 +777,14 @@
       updateSizeUI();
       updateDifficultyUI();
 
-      const todaySeedStr = `sudoku_daily_saved_${getDailySeed()}_${config.id}`;
-      const savedDaily = localStorage.getItem(todaySeedStr);
+      // הפקת לוח אחיד לפי ה-Seed היומי והגדרת טיימר נקי מ-00:00 לניסיון החדש
+      const challengeSeed = getDailySeed() + DAILY_CHALLENGES_CATALOG.findIndex(c => c.id === config.id);
+      createNewGame(challengeSeed);
 
-      if (savedDaily) {
-        loadSavedGame(todaySeedStr);
-      } else {
-        dailyHintsUsed = 0;
-        dailyErrorsMade = 0;
-        createNewGame(getDailySeed() + DAILY_CHALLENGES_CATALOG.findIndex(c => c.id === config.id));
-      }
+      secondsElapsed = 0;
+      dailyHintsUsed = 0;
+      dailyErrorsMade = 0;
+      updateTimerDisplay();
 
       switchToGame();
     }
@@ -1205,7 +1207,7 @@
     }
 
     function saveGameState() {
-      if (!currentDifficulty || !currentBoard.length || isCompetitiveMode) return;
+      if (!currentDifficulty || !currentBoard.length || isCompetitiveMode || isDailyMode) return;
       
       const serializableNotes = pencilNotes.map(row => 
         row.map(cellSet => Array.from(cellSet))
@@ -1220,24 +1222,14 @@
         pencilNotes: serializableNotes,
         secondsElapsed,
         isPaused,
-        isPencilMode,
-        isDailyMode,
-        dailyHintsUsed,
-        dailyErrorsMade,
-        dailyConfigId: currentDailyConfig ? currentDailyConfig.id : null
+        isPencilMode
       };
 
-      if (isDailyMode && currentDailyConfig) {
-        const todayKey = `sudoku_daily_saved_${getDailySeed()}_${currentDailyConfig.id}`;
-        localStorage.setItem(todayKey, JSON.stringify(state));
-      } else {
-        localStorage.setItem('sudoku_active_game', JSON.stringify(state));
-      }
+      localStorage.setItem('sudoku_active_game', JSON.stringify(state));
     }
 
-    function loadSavedGame(customKey = null) {
-      const keyToLoad = customKey || 'sudoku_active_game';
-      const stored = localStorage.getItem(keyToLoad);
+    function loadSavedGame() {
+      const stored = localStorage.getItem('sudoku_active_game');
       if (!stored) return false;
       try {
         const state = JSON.parse(stored);
@@ -1251,14 +1243,6 @@
         secondsElapsed = state.secondsElapsed || 0;
         isPaused = state.isPaused || false;
         isPencilMode = state.isPencilMode || false;
-        isDailyMode = state.isDailyMode || false;
-        dailyHintsUsed = state.dailyHintsUsed || 0;
-        dailyErrorsMade = state.dailyErrorsMade || 0;
-
-        if (state.dailyConfigId) {
-          const foundConfig = DAILY_CHALLENGES_CATALOG.find(c => c.id === state.dailyConfigId);
-          if (foundConfig) currentDailyConfig = foundConfig;
-        }
 
         if (state.pencilNotes) {
           pencilNotes = state.pencilNotes.map(row => 
@@ -1290,12 +1274,7 @@
     }
 
     function clearSavedGame() {
-      if (isDailyMode && currentDailyConfig) {
-        const todayKey = `sudoku_daily_saved_${getDailySeed()}_${currentDailyConfig.id}`;
-        localStorage.removeItem(todayKey);
-      } else {
-        localStorage.removeItem('sudoku_active_game');
-      }
+      localStorage.removeItem('sudoku_active_game');
     }
 
     // --- מחולל סודוקו מתקדם (תומך Seed יומי ואלכסונים) ---
@@ -1394,43 +1373,6 @@
         }
       }
       return true;
-    }
-
-    function evaluateLogicalDifficulty(puzzle, size = currentSize) {
-      let temp = JSON.parse(JSON.stringify(puzzle));
-      let steps = 0;
-      let totalCells = size * size;
-
-      while (steps < totalCells) {
-        steps++;
-        let progress = false;
-
-        for (let r = 0; r < size; r++) {
-          for (let c = 0; c < size; c++) {
-            if (temp[r][c] === 0) {
-              let candidates = [];
-              for (let val = 1; val <= size; val++) {
-                if (isSafe(temp, r, c, val, size)) candidates.push(val);
-              }
-              if (candidates.length === 1) {
-                temp[r][c] = candidates[0];
-                progress = true;
-              }
-            }
-          }
-        }
-
-        if (!progress) break;
-      }
-
-      let remainingEmpty = 0;
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          if (temp[r][c] === 0) remainingEmpty++;
-        }
-      }
-
-      return { solvedBySingles: remainingEmpty === 0, remainingEmpty };
     }
 
     function generateSudoku(difficulty, size = currentSize, seedValue = null) {
@@ -1903,7 +1845,6 @@
       winModal.classList.add('flex');
     }
 
-    // טיפול במסך סיכום במקרה הפסד (תום זמן או פסילות בהישרדות) + ניקוד השתתפות
     function handleLoss(reason = 'timeout') {
       stopTimer();
       clearSavedGame();
@@ -1930,7 +1871,7 @@
 
       if (isDailyMode) {
         const streak = parseInt(localStorage.getItem('sudoku_streak') || 1);
-        const participationBase = 30; // ניקוד בסיס על השתתפות
+        const participationBase = 30;
         const streakBonus = streak * 10;
         const total = participationBase + streakBonus;
 
