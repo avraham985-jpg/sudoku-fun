@@ -390,13 +390,13 @@
 
 
   <!-- ========================================== -->
-  <!-- 5. חלון פופ-אפ לניצחון (WIN MODAL)          -->
+  <!-- 5. חלון פופ-אפ לסיכום המשחק (RESULT MODAL)  -->
   <!-- ========================================== -->
   <div id="win-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex-col items-center justify-center z-50 p-4">
     <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3">
-      <div class="text-5xl">🏆</div>
-      <h2 class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
-      <p class="text-sm text-slate-600">פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">00:00</span>!</p>
+      <div id="win-modal-icon" class="text-5xl">🏆</div>
+      <h2 id="win-modal-title" class="text-2xl font-black text-indigo-600">כל הכבוד!</h2>
+      <p id="win-modal-desc" class="text-sm text-slate-600">פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">00:00</span>!</p>
       
       <div id="daily-score-breakdown" class="hidden w-full bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex-col gap-1.5 text-xs text-right">
         <div class="font-extrabold text-indigo-800 text-center border-b border-indigo-200/60 pb-1">🎯 ניקוד האתגר היומי</div>
@@ -481,7 +481,7 @@
         id: 'no_pencil_9x9',
         name: 'אימון הזיכרון 🧠',
         size: 9,
-        difficulty: 'easy',
+        difficulty: 'medium', // עודכן מ-easy ל-medium
         disablePencil: true,
         description: 'אתגר ללא הערות: מצב ה-Pencil מבוטל ליום זה. החזק את האפשרויות בראש!',
         baseScore: 130
@@ -581,8 +581,14 @@
     function switchToHome() {
       stopTimer();
       saveGameState();
+
+      // איפוס מוחלט של זיכרון ה-Timer והמשתנים כדי למנוע זליגה
+      secondsElapsed = 0;
+      dailyHintsUsed = 0;
+      dailyErrorsMade = 0;
       isCompetitiveMode = false;
       isDailyMode = false;
+
       document.getElementById('game-view').classList.add('hidden');
       document.getElementById('game-view').classList.remove('flex');
       document.getElementById('leaderboard-view').classList.add('hidden');
@@ -594,8 +600,13 @@
     function switchToLeaderboards() {
       stopTimer();
       saveGameState();
+
+      secondsElapsed = 0;
+      dailyHintsUsed = 0;
+      dailyErrorsMade = 0;
       isCompetitiveMode = false;
       isDailyMode = false;
+
       document.getElementById('home-view').classList.add('hidden');
       document.getElementById('game-view').classList.add('hidden');
       document.getElementById('game-view').classList.remove('flex');
@@ -694,6 +705,10 @@
     function startClassicGame(diff = 'easy', size = 9) {
       isCompetitiveMode = false;
       isDailyMode = false;
+      secondsElapsed = 0;
+      dailyHintsUsed = 0;
+      dailyErrorsMade = 0;
+
       document.getElementById('game-title-display').innerText = "סודוקו קלאסי";
       document.getElementById('difficulty-selector-bar').classList.remove('hidden');
       document.getElementById('size-selector-bar').classList.remove('hidden');
@@ -709,6 +724,8 @@
       currentBoard = []; 
       isPaused = false;
       secondsElapsed = 0;
+      dailyHintsUsed = 0;
+      dailyErrorsMade = 0;
 
       document.getElementById('game-title-display').innerText = `מצב תחרותי (${getDifficultyName(diff)}) ⚡`;
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
@@ -743,6 +760,7 @@
     function startDailyChallenge() {
       isCompetitiveMode = false;
       isDailyMode = true;
+      secondsElapsed = 0;
       
       const config = currentDailyConfig || getTodayChallengeConfig();
       currentSize = config.size || 9;
@@ -772,6 +790,10 @@
     function startJourneyMode() {
       isCompetitiveMode = false;
       isDailyMode = false;
+      secondsElapsed = 0;
+      dailyHintsUsed = 0;
+      dailyErrorsMade = 0;
+
       document.getElementById('game-title-display').innerText = "מסע השלבים - שלב 1 🗺️";
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
       document.getElementById('size-selector-bar').classList.add('hidden');
@@ -1580,10 +1602,7 @@
         const secs = (remaining % 60).toString().padStart(2, '0');
         timerDisplay.innerText = `${mins}:${secs}`;
         if (remaining <= 0) {
-          stopTimer();
-          alert('הזמן אזל! נסה שוב מחר.');
-          clearSavedGame();
-          switchToHome();
+          handleLoss('timeout');
         }
       } else {
         const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
@@ -1763,6 +1782,7 @@
       errorCells = [];
       hintCell = null;
       isPaused = false;
+      secondsElapsed = 0;
       startTimer();
       renderUI();
       saveGameState();
@@ -1833,6 +1853,10 @@
       const isNewRecord = checkAndUpdateBestTime(currentDifficulty, secondsElapsed);
       const recordBadge = document.getElementById('new-record-badge');
       const dailyBreakdown = document.getElementById('daily-score-breakdown');
+
+      document.getElementById('win-modal-icon').innerText = '🏆';
+      document.getElementById('win-modal-title').innerText = 'כל הכבוד!';
+      document.getElementById('win-modal-desc').innerHTML = `פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">${document.getElementById('timer-display').innerText}</span>!`;
       
       if (isDailyMode) {
         const streak = parseInt(localStorage.getItem('sudoku_streak') || 1);
@@ -1873,9 +1897,63 @@
       if (typeof confetti === 'function') {
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       }
-
-      document.getElementById('win-time').innerText = document.getElementById('timer-display').innerText;
       
+      const winModal = document.getElementById('win-modal');
+      winModal.classList.remove('hidden');
+      winModal.classList.add('flex');
+    }
+
+    // טיפול במסך סיכום במקרה הפסד (תום זמן או פסילות בהישרדות) + ניקוד השתתפות
+    function handleLoss(reason = 'timeout') {
+      stopTimer();
+      clearSavedGame();
+      playErrorSound();
+
+      const modalIcon = document.getElementById('win-modal-icon');
+      const modalTitle = document.getElementById('win-modal-title');
+      const modalDesc = document.getElementById('win-modal-desc');
+      const dailyBreakdown = document.getElementById('daily-score-breakdown');
+      const recordBadge = document.getElementById('new-record-badge');
+
+      recordBadge.classList.add('hidden');
+
+      if (reason === 'timeout') {
+        modalIcon.innerText = '⏱️';
+        modalTitle.innerText = 'הזמן אזל!';
+        modalDesc.innerHTML = `נגמר הזמן הקצוב לאתגר.<br><span class="font-bold text-indigo-600">כל הכבוד על המאמץ!</span>`;
+      } else if (reason === 'survival') {
+        const maxErrors = currentDailyConfig ? getMaxSurvivalErrors(currentDailyConfig.difficulty) : 2;
+        modalIcon.innerText = '💀';
+        modalTitle.innerText = 'המשחק הסתיים';
+        modalDesc.innerHTML = `הגעת למכסת הפסילות המרבית (${maxErrors}/${maxErrors}).<br><span class="font-bold text-indigo-600">כל הכבוד על המאמץ!</span>`;
+      }
+
+      if (isDailyMode) {
+        const streak = parseInt(localStorage.getItem('sudoku_streak') || 1);
+        const participationBase = 30; // ניקוד בסיס על השתתפות
+        const streakBonus = streak * 10;
+        const total = participationBase + streakBonus;
+
+        document.getElementById('score-base').innerText = `${participationBase} (השתתפות)`;
+        document.getElementById('score-speed').innerText = `+0`;
+        document.getElementById('score-hints-penalty').innerText = `-0`;
+        document.getElementById('score-streak').innerText = `+${streakBonus}`;
+
+        const rowMilestone = document.getElementById('row-milestone');
+        rowMilestone.classList.add('hidden');
+        rowMilestone.classList.remove('flex');
+
+        document.getElementById('score-total').innerText = total;
+        dailyBreakdown.classList.remove('hidden');
+        dailyBreakdown.classList.add('flex');
+
+        const currentCum = parseInt(localStorage.getItem('sudoku_daily_cumulative_score') || 0);
+        localStorage.setItem('sudoku_daily_cumulative_score', currentCum + total);
+      } else {
+        dailyBreakdown.classList.add('hidden');
+        dailyBreakdown.classList.remove('flex');
+      }
+
       const winModal = document.getElementById('win-modal');
       winModal.classList.remove('hidden');
       winModal.classList.add('flex');
@@ -2081,7 +2159,6 @@
         pencilNotes[row][col].clear();
         autoCleanPencilNotes(row, col, num);
 
-        // בדיקת שגיאה במצב הישרדות
         if (isDailyMode && currentDailyConfig && currentDailyConfig.isSurvival && solution.length) {
           if (num !== solution[row][col]) {
             dailyErrorsMade++;
@@ -2091,11 +2168,8 @@
             updateCompetitiveUI();
 
             if (dailyErrorsMade >= maxErrors) {
-              stopTimer();
               setTimeout(() => {
-                alert(`נפסלת! הגעת למכסת הטעויות המרבית (${maxErrors}/${maxErrors}) במצב הישרדות.`);
-                clearSavedGame();
-                switchToHome();
+                handleLoss('survival');
               }, 400);
               return;
             }
