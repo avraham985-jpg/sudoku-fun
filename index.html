@@ -28,10 +28,16 @@
     
     @keyframes errorShake {
       0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-2px); }
-      75% { transform: translateX(2px); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
     }
     .error-animate { animation: errorShake 0.3s ease-in-out; }
+
+    @keyframes boardRedFlash {
+      0%, 100% { border-color: transparent; box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff; }
+      50% { border-color: #ef4444; box-shadow: 0 0 20px #ef4444, inset 0 0 15px #ef4444; }
+    }
+    .board-error-flash { animation: boardRedFlash 0.6s ease-in-out; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-between p-4 select-none">
@@ -261,8 +267,8 @@
 
     <main class="w-full flex flex-col items-center gap-3">
       
-      <div id="board-container" class="relative w-full aspect-square">
-        <div id="board" class="p-1.5 bg-slate-100 shadow-outset rounded-2xl w-full h-full overflow-hidden transition-all duration-200"></div>
+      <div id="board-container" class="relative w-full aspect-square transition-all duration-300 rounded-2xl">
+        <div id="board" class="p-1.5 bg-slate-100 shadow-outset rounded-2xl w-full h-full overflow-hidden transition-all duration-200 border-2 border-transparent"></div>
         
         <div id="start-overlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center p-6 text-center z-10">
           <div class="bg-white/95 p-5 rounded-2xl shadow-xl flex flex-col items-center gap-2">
@@ -396,7 +402,7 @@
         <div class="font-extrabold text-indigo-800 text-center border-b border-indigo-200/60 pb-1">🎯 ניקוד האתגר היומי</div>
         <div class="flex justify-between text-slate-600"><span>בסיס פתרון:</span><span id="score-base" class="font-bold">100</span></div>
         <div class="flex justify-between text-slate-600"><span>בונוס מהירות/זמן:</span><span id="score-speed" class="font-bold text-emerald-600">+0</span></div>
-        <div class="flex justify-between text-slate-600"><span>קנס רמזים (💡):</span><span id="score-hints-penalty" class="font-bold text-rose-600">-0</span></div>
+        <div class="flex justify-between text-slate-600"><span>קנס רמזים/טעויות:</span><span id="score-hints-penalty" class="font-bold text-rose-600">-0</span></div>
         <div class="flex justify-between text-slate-600"><span>בונוס רצף (🔥):</span><span id="score-streak" class="font-bold text-amber-600">+0</span></div>
         <div id="row-milestone" class="hidden flex justify-between text-slate-600 bg-amber-100 px-1.5 py-0.5 rounded-md font-bold text-amber-900"><span>🎉 אבן דרך שבועית!</span><span id="score-milestone">+100</span></div>
         <div class="flex justify-between font-black text-indigo-700 text-sm border-t border-indigo-200/60 pt-1 mt-0.5"><span>סה"כ ליום זה:</span><span id="score-total">0</span></div>
@@ -420,6 +426,37 @@
     let isCompetitiveMode = false;
     let isDailyMode = false;
 
+    // --- מחולל מספרים אקראיים מבוסס Seed יומי ---
+    function getDailySeed() {
+      const today = new Date();
+      return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    }
+
+    function getSeededRandom(seed) {
+      let s = seed % 2147483647;
+      if (s <= 0) s += 2147483646;
+      return function() {
+        s = (s * 16807) % 2147483647;
+        return (s - 1) / 2147483646;
+      };
+    }
+
+    // --- זמני מרוץ נגד השעון לפי קושי ---
+    function getTimeLimitSeconds(diff) {
+      if (diff === 'easy') return 270;   // 4:30 דקות
+      if (diff === 'medium') return 360; // 6:00 דקות
+      if (diff === 'hard') return 480;   // 8:00 דקות
+      return 360;
+    }
+
+    // --- מכסת טעויות במצב הישרדות לפי קושי ---
+    function getMaxSurvivalErrors(diff) {
+      if (diff === 'easy') return 1;
+      if (diff === 'medium') return 2;
+      if (diff === 'hard') return 3;
+      return 2;
+    }
+
     // --- קטלוג אתגרים יומיים ---
     const DAILY_CHALLENGES_CATALOG = [
       {
@@ -436,8 +473,8 @@
         name: 'מרוץ נגד השעון ⏱️',
         size: 9,
         difficulty: 'easy',
-        timeLimitSeconds: 360, // 6 דקות
-        description: 'אתגר מהירות! שעון העצר סופר לאחור מ-6:00 דקות. פתור לפני שהזמן מסתיים!',
+        isTimeAttack: true,
+        description: 'אתגר מהירות! שעון העצר סופר לאחור (4:30 לקל, 6:00 לבינוני, 8:00 לקשה). פתור לפני שהזמן מסתיים!',
         baseScore: 120
       },
       {
@@ -458,23 +495,21 @@
         baseScore: 250
       },
       {
-        id: 'sudden_death_9x9',
-        name: 'הישרדות מתוחה 💀',
+        id: 'survival_9x9',
+        name: 'מצב הישרדות 💀',
         size: 9,
         difficulty: 'medium',
-        description: 'ללא רשת ביטחון! 3 רמזים מוגבלים בלבד וללא אפשרות לבדיקת שגיאות.',
+        isSurvival: true,
+        disableHints: true,
+        description: 'ללא רשת ביטחון! ללא רמזים בכלל, ועם מכסת טעויות מוגבלת. טעות אחת מיותרת והמשחק מסתיים!',
         baseScore: 180
       }
     ];
 
     let currentDailyConfig = DAILY_CHALLENGES_CATALOG[0];
     let dailyHintsUsed = 0;
+    let dailyErrorsMade = 0;
     const MAX_DAILY_HINTS = 3;
-
-    function getDailySeed() {
-      const today = new Date();
-      return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    }
 
     function getTodayChallengeConfig() {
       const seed = getDailySeed();
@@ -482,19 +517,21 @@
     }
 
     // --- חישוב ניקוד באתגר היומי ---
-    function calculateDailyScore(seconds, streak, hintsUsed = 0) {
+    function calculateDailyScore(seconds, streak, hintsUsed = 0, errorsMade = 0) {
       const challenge = currentDailyConfig || getTodayChallengeConfig();
       let base = challenge.baseScore || 100;
       let speedBonus = 0;
 
-      if (challenge.timeLimitSeconds) {
-        const remainingTime = Math.max(0, challenge.timeLimitSeconds - seconds);
+      const timeLimit = challenge.isTimeAttack ? getTimeLimitSeconds(challenge.difficulty) : challenge.timeLimitSeconds;
+
+      if (timeLimit) {
+        const remainingTime = Math.max(0, timeLimit - seconds);
         speedBonus = remainingTime * 2;
       } else {
         speedBonus = Math.max(10, 60 - Math.floor(seconds / 10));
       }
 
-      const hintsPenalty = hintsUsed * 30;
+      const hintsPenalty = (hintsUsed * 30) + (errorsMade * 20);
       const streakBonus = streak * 10;
       const milestoneBonus = (streak > 0 && streak % 7 === 0) ? 100 : 0;
       
@@ -629,14 +666,23 @@
       document.getElementById('intro-challenge-size').innerText = `${currentDailyConfig.size}x${currentDailyConfig.size}`;
       document.getElementById('intro-challenge-desc').innerText = currentDailyConfig.description;
 
-      if (currentDailyConfig.timeLimitSeconds) {
-        const mins = Math.floor(currentDailyConfig.timeLimitSeconds / 60);
-        document.getElementById('intro-rule-time').innerText = `זמן: ${mins}:00 דק'`;
+      const timeLimit = currentDailyConfig.isTimeAttack ? getTimeLimitSeconds(currentDailyConfig.difficulty) : currentDailyConfig.timeLimitSeconds;
+
+      if (timeLimit) {
+        const mins = Math.floor(timeLimit / 60);
+        const secs = (timeLimit % 60).toString().padStart(2, '0');
+        document.getElementById('intro-rule-time').innerText = `זמן: ${mins}:${secs} דק'`;
       } else {
         document.getElementById('intro-rule-time').innerText = 'ללא הגבלת זמן';
       }
 
-      document.getElementById('intro-rule-hints').innerText = `עד ${MAX_DAILY_HINTS} רמזים`;
+      if (currentDailyConfig.isSurvival) {
+        const maxErrors = getMaxSurvivalErrors(currentDailyConfig.difficulty);
+        document.getElementById('intro-rule-hints').innerText = `ללא רמזים • ${maxErrors} פסילות`;
+      } else {
+        document.getElementById('intro-rule-hints').innerText = `עד ${MAX_DAILY_HINTS} רמזים`;
+      }
+
       document.getElementById('intro-rule-streak').innerText = `רצף פעיל: ${streak}`;
     }
 
@@ -697,8 +743,7 @@
     function startDailyChallenge() {
       isCompetitiveMode = false;
       isDailyMode = true;
-      dailyHintsUsed = 0;
-
+      
       const config = currentDailyConfig || getTodayChallengeConfig();
       currentSize = config.size || 9;
       currentDifficulty = config.difficulty || 'medium';
@@ -710,7 +755,17 @@
       updateSizeUI();
       updateDifficultyUI();
 
-      createNewGame();
+      const todaySeedStr = `sudoku_daily_saved_${getDailySeed()}_${config.id}`;
+      const savedDaily = localStorage.getItem(todaySeedStr);
+
+      if (savedDaily) {
+        loadSavedGame(todaySeedStr);
+      } else {
+        dailyHintsUsed = 0;
+        dailyErrorsMade = 0;
+        createNewGame(getDailySeed() + DAILY_CHALLENGES_CATALOG.findIndex(c => c.id === config.id));
+      }
+
       switchToGame();
     }
 
@@ -755,7 +810,6 @@
       } else if (isDailyMode) {
         banner.classList.remove('hidden');
         banner.classList.add('flex');
-        bannerText.innerText = "האתגר היומי - מוגבל ל-3 רמזים, ללא בדיקת שגיאות!";
         
         diffBar.classList.add('hidden');
         sizeBar.classList.add('hidden');
@@ -764,12 +818,20 @@
         checkBtn.classList.add('opacity-40', 'pointer-events-none');
         newBtn.classList.add('opacity-40', 'pointer-events-none');
         
-        const remainingHints = MAX_DAILY_HINTS - dailyHintsUsed;
-        hintText.innerText = `רמז (${remainingHints}/${MAX_DAILY_HINTS})`;
-        if (remainingHints <= 0) {
+        if (currentDailyConfig && currentDailyConfig.isSurvival) {
+          const maxErrors = getMaxSurvivalErrors(currentDailyConfig.difficulty);
+          bannerText.innerText = `מצב הישרדות 💀 - ללא רמזים! פסילות: ${dailyErrorsMade}/${maxErrors}`;
+          hintText.innerText = "רמז";
           hintBtn.classList.add('opacity-40', 'pointer-events-none');
         } else {
-          hintBtn.classList.remove('opacity-40', 'pointer-events-none');
+          bannerText.innerText = "האתגר היומי - מוגבל ל-3 רמזים, ללא בדיקת שגיאות!";
+          const remainingHints = MAX_DAILY_HINTS - dailyHintsUsed;
+          hintText.innerText = `רמז (${remainingHints}/${MAX_DAILY_HINTS})`;
+          if (remainingHints <= 0) {
+            hintBtn.classList.add('opacity-40', 'pointer-events-none');
+          } else {
+            hintBtn.classList.remove('opacity-40', 'pointer-events-none');
+          }
         }
 
         if (currentDailyConfig && currentDailyConfig.disablePencil) {
@@ -1138,13 +1200,22 @@
         isPaused,
         isPencilMode,
         isDailyMode,
-        dailyHintsUsed
+        dailyHintsUsed,
+        dailyErrorsMade,
+        dailyConfigId: currentDailyConfig ? currentDailyConfig.id : null
       };
-      localStorage.setItem('sudoku_active_game', JSON.stringify(state));
+
+      if (isDailyMode && currentDailyConfig) {
+        const todayKey = `sudoku_daily_saved_${getDailySeed()}_${currentDailyConfig.id}`;
+        localStorage.setItem(todayKey, JSON.stringify(state));
+      } else {
+        localStorage.setItem('sudoku_active_game', JSON.stringify(state));
+      }
     }
 
-    function loadSavedGame() {
-      const stored = localStorage.getItem('sudoku_active_game');
+    function loadSavedGame(customKey = null) {
+      const keyToLoad = customKey || 'sudoku_active_game';
+      const stored = localStorage.getItem(keyToLoad);
       if (!stored) return false;
       try {
         const state = JSON.parse(stored);
@@ -1160,6 +1231,12 @@
         isPencilMode = state.isPencilMode || false;
         isDailyMode = state.isDailyMode || false;
         dailyHintsUsed = state.dailyHintsUsed || 0;
+        dailyErrorsMade = state.dailyErrorsMade || 0;
+
+        if (state.dailyConfigId) {
+          const foundConfig = DAILY_CHALLENGES_CATALOG.find(c => c.id === state.dailyConfigId);
+          if (foundConfig) currentDailyConfig = foundConfig;
+        }
 
         if (state.pencilNotes) {
           pencilNotes = state.pencilNotes.map(row => 
@@ -1191,10 +1268,15 @@
     }
 
     function clearSavedGame() {
-      localStorage.removeItem('sudoku_active_game');
+      if (isDailyMode && currentDailyConfig) {
+        const todayKey = `sudoku_daily_saved_${getDailySeed()}_${currentDailyConfig.id}`;
+        localStorage.removeItem(todayKey);
+      } else {
+        localStorage.removeItem('sudoku_active_game');
+      }
     }
 
-    // --- מחולל סודוקו מתקדם (עם תמיכה באלכסונים) ---
+    // --- מחולל סודוקו מתקדם (תומך Seed יומי ואלכסונים) ---
     function countSolutions(board, size = currentSize, limit = 2) {
       let count = 0;
       
@@ -1273,15 +1355,15 @@
       return true;
     }
 
-    function solveSudoku(board, size = currentSize) {
+    function solveSudoku(board, size = currentSize, rngFunc = Math.random) {
       for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
           if (board[row][col] === 0) {
-            let nums = Array.from({ length: size }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+            let nums = Array.from({ length: size }, (_, i) => i + 1).sort(() => rngFunc() - 0.5);
             for (let num of nums) {
               if (isSafe(board, row, col, num, size)) {
                 board[row][col] = num;
-                if (solveSudoku(board, size)) return true;
+                if (solveSudoku(board, size, rngFunc)) return true;
                 board[row][col] = 0;
               }
             }
@@ -1329,16 +1411,18 @@
       return { solvedBySingles: remainingEmpty === 0, remainingEmpty };
     }
 
-    function generateSudoku(difficulty, size = currentSize) {
+    function generateSudoku(difficulty, size = currentSize, seedValue = null) {
+      const rng = seedValue !== null ? getSeededRandom(seedValue) : Math.random;
       let attempts = 0;
+
       while (attempts < 20) {
         attempts++;
         
         let fullBoard = Array.from({ length: size }, () => Array(size).fill(0));
-        let firstRowNums = Array.from({ length: size }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+        let firstRowNums = Array.from({ length: size }, (_, i) => i + 1).sort(() => rng() - 0.5);
         for (let c = 0; c < size; c++) fullBoard[0][c] = firstRowNums[c];
 
-        solveSudoku(fullBoard, size);
+        solveSudoku(fullBoard, size, rng);
 
         let puzzle = JSON.parse(JSON.stringify(fullBoard));
         let totalCells = size * size;
@@ -1351,16 +1435,16 @@
         } else if (size === 12) {
           targetClues = difficulty === 'easy' ? 88 : difficulty === 'medium' ? 68 : 52;
         } else {
-          targetClues = difficulty === 'easy' ? 44 + Math.floor(Math.random() * 3) : 
-                        difficulty === 'medium' ? 34 + Math.floor(Math.random() * 3) : 
-                        28 + Math.floor(Math.random() * 3);
+          targetClues = difficulty === 'easy' ? 44 + Math.floor(rng() * 3) : 
+                        difficulty === 'medium' ? 34 + Math.floor(rng() * 3) : 
+                        28 + Math.floor(rng() * 3);
         }
 
         let positions = [];
         for (let r = 0; r < size; r++) {
           for (let c = 0; c < size; c++) positions.push([r, c]);
         }
-        positions.sort(() => Math.random() - 0.5);
+        positions.sort(() => rng() - 0.5);
 
         let currentClues = totalCells;
 
@@ -1382,9 +1466,9 @@
       }
 
       let fullBoard = Array.from({ length: size }, () => Array(size).fill(0));
-      let firstRowNums = Array.from({ length: size }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+      let firstRowNums = Array.from({ length: size }, (_, i) => i + 1).sort(() => rng() - 0.5);
       for (let c = 0; c < size; c++) fullBoard[0][c] = firstRowNums[c];
-      solveSudoku(fullBoard, size);
+      solveSudoku(fullBoard, size, rng);
       return { puzzle: fullBoard, solution: fullBoard };
     }
 
@@ -1422,6 +1506,21 @@
       gainNode.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playErrorSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.25);
+      gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
     }
 
     function playFanfareSound() {
@@ -1471,15 +1570,19 @@
 
     function updateTimerDisplay() {
       const timerDisplay = document.getElementById('timer-display');
-      
-      if (isDailyMode && currentDailyConfig && currentDailyConfig.timeLimitSeconds) {
-        const remaining = Math.max(0, currentDailyConfig.timeLimitSeconds - secondsElapsed);
+      const timeLimit = (isDailyMode && currentDailyConfig && currentDailyConfig.isTimeAttack) ? 
+                        getTimeLimitSeconds(currentDailyConfig.difficulty) : 
+                        (currentDailyConfig ? currentDailyConfig.timeLimitSeconds : null);
+
+      if (isDailyMode && timeLimit) {
+        const remaining = Math.max(0, timeLimit - secondsElapsed);
         const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
         const secs = (remaining % 60).toString().padStart(2, '0');
         timerDisplay.innerText = `${mins}:${secs}`;
         if (remaining <= 0) {
           stopTimer();
           alert('הזמן אזל! נסה שוב מחר.');
+          clearSavedGame();
           switchToHome();
         }
       } else {
@@ -1515,6 +1618,11 @@
 
     function giveHint() {
       if (!currentDifficulty || isPaused || isCompetitiveMode || !solution.length) return;
+
+      if (isDailyMode && currentDailyConfig && currentDailyConfig.isSurvival) {
+        alert('אין רמזים במצב הישרדות!');
+        return;
+      }
 
       if (isDailyMode && dailyHintsUsed >= MAX_DAILY_HINTS) {
         alert('הגעת למכסת הרמזים המרבית באתגר היומי (3 רמזים)!');
@@ -1634,7 +1742,7 @@
       });
     }
 
-    function createNewGame() {
+    function createNewGame(seedValue = null) {
       if (isCompetitiveMode && currentBoard.length > 0) return;
       if (!currentDifficulty) currentDifficulty = 'easy';
       if (!currentSize) currentSize = 9;
@@ -1645,7 +1753,7 @@
       document.getElementById('pause-overlay').classList.add('hidden');
       document.getElementById('pause-overlay').classList.remove('flex');
 
-      const generated = generateSudoku(currentDifficulty, currentSize);
+      const generated = generateSudoku(currentDifficulty, currentSize, seedValue);
       initialPuzzle = generated.puzzle;
       solution = generated.solution;
       currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
@@ -1728,7 +1836,7 @@
       
       if (isDailyMode) {
         const streak = parseInt(localStorage.getItem('sudoku_streak') || 1);
-        const scoreData = calculateDailyScore(secondsElapsed, streak, dailyHintsUsed);
+        const scoreData = calculateDailyScore(secondsElapsed, streak, dailyHintsUsed, dailyErrorsMade);
         
         document.getElementById('score-base').innerText = scoreData.base;
         document.getElementById('score-speed').innerText = `+${scoreData.speedBonus}`;
@@ -1788,6 +1896,24 @@
       checkDevModeUI();
       updateSizeUI();
       updateDifficultyUI();
+    }
+
+    function triggerErrorAnimation(row, col) {
+      playErrorSound();
+      
+      const boardContainer = document.getElementById('board-container');
+      boardContainer.classList.add('board-error-flash');
+      setTimeout(() => {
+        boardContainer.classList.remove('board-error-flash');
+      }, 600);
+
+      errorCells = [{ row, col }];
+      renderBoard();
+      
+      setTimeout(() => {
+        errorCells = [];
+        renderBoard();
+      }, 1200);
     }
 
     function renderBoard() {
@@ -1947,18 +2073,45 @@
         } else {
           pencilNotes[row][col].add(num);
         }
+        errorCells = [];
+        saveGameState();
+        renderUI();
       } else {
         currentBoard[row][col] = num;
         pencilNotes[row][col].clear();
         autoCleanPencilNotes(row, col, num);
-      }
 
-      errorCells = [];
-      saveGameState();
-      renderUI();
+        // בדיקת שגיאה במצב הישרדות
+        if (isDailyMode && currentDailyConfig && currentDailyConfig.isSurvival && solution.length) {
+          if (num !== solution[row][col]) {
+            dailyErrorsMade++;
+            triggerErrorAnimation(row, col);
 
-      if (!isPencilMode && checkWinCondition()) {
-        setTimeout(handleWin, 150);
+            const maxErrors = getMaxSurvivalErrors(currentDailyConfig.difficulty);
+            updateCompetitiveUI();
+
+            if (dailyErrorsMade >= maxErrors) {
+              stopTimer();
+              setTimeout(() => {
+                alert(`נפסלת! הגעת למכסת הטעויות המרבית (${maxErrors}/${maxErrors}) במצב הישרדות.`);
+                clearSavedGame();
+                switchToHome();
+              }, 400);
+              return;
+            }
+          } else {
+            errorCells = [];
+          }
+        } else {
+          errorCells = [];
+        }
+
+        saveGameState();
+        renderUI();
+
+        if (checkWinCondition()) {
+          setTimeout(handleWin, 150);
+        }
       }
     }
 
