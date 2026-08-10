@@ -243,7 +243,7 @@
       <div class="text-center">
         <span id="world-tag" class="bg-white/20 backdrop-blur-sm text-[9.5px] font-extrabold px-2 py-0.5 rounded-md">עולם 1</span>
         <h3 id="world-title" class="font-black text-base mt-0.5">השורשים והיסודות</h3>
-        <p id="world-subtitle" class="text-[10px] text-emerald-100 mt-0.5">שלבים 1-10 • מטפסים מליבת השורשים לפסגה</p>
+        <p id="world-subtitle" class="text-[10px] text-emerald-100 mt-0.5">שלבים 1-10 • מטפסים מהשורשים לפסגה</p>
       </div>
       <button onclick="changeJourneyWorld(1)" id="btn-next-world" class="bg-white/20 hover:bg-white/30 text-white font-bold p-2 rounded-xl text-xs active:scale-95 transition-all">▶</button>
     </div>
@@ -284,7 +284,7 @@
         </div>
       </div>
 
-      <!-- באנר מצב תחרותי / באנר אתגר יומי -->
+      <!-- באנר מצב תחרותי / באנר אתגר יומי / באנר מסע -->
       <div id="competitive-banner" class="hidden w-full bg-amber-500 text-white font-extrabold text-[11px] py-1 px-3 rounded-xl shadow-sm text-center items-center justify-center gap-1.5">
         <span>⚡</span> <span id="banner-text">מצב תחרותי - ללא רמזים, עזרים או השהיה!</span>
       </div>
@@ -351,7 +351,7 @@
             <span>✏️</span> <span>הערות</span>
           </button>
           <button id="action-btn-check" onclick="checkErrors()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
-            <span>🔍</span> <span>בדיקה</span>
+            <span>🔍</span> <span id="check-btn-text">בדיקה</span>
           </button>
           <button id="action-btn-erase" onclick="handleErase()" class="bg-white hover:bg-rose-50 text-rose-600 font-bold py-2 rounded-xl shadow-outset-sm active:shadow-inset active:scale-95 transition-all text-[11px] flex flex-col items-center justify-center gap-0.5">
             <span>🗑️</span> <span>מחק</span>
@@ -480,12 +480,15 @@
     let currentJourneyLevel = 1;
     let currentJourneyWorld = 1;
 
+    let dailyChecksUsed = 0; // מעקב אחר מספר הבדיקות בשלב
+
     // --- קטלוג 5 העולמות ו-50 השלבים במסע ---
+    // כל עולם מסתיים ב-3 שלבים קשים (שלבים 8, 9, 10 בכל עולם)
     const JOURNEY_WORLDS = [
       {
         world: 1,
         title: "השורשים והיסודות 🌿",
-        subtitle: "שלבים 1-10 • מטפסים מלמעלה למטה מהשורשים לפסגה",
+        subtitle: "שלבים 1-10 • מטפסים מהשורשים לפסגה",
         bgGradient: "from-emerald-600 to-teal-700",
         levels: [
           { level: 1, size: 4, diff: 'easy', name: 'שורש ראשון (4x4)' },
@@ -494,10 +497,10 @@
           { level: 4, size: 6, diff: 'easy', name: 'מפתנים חדשים (6x6)' },
           { level: 5, size: 6, diff: 'easy', name: 'צעדים ב-6x6' },
           { level: 6, size: 6, diff: 'medium', name: 'עולים מדרגה (6x6)' },
-          { level: 7, size: 6, diff: 'hard', name: 'מאסטר 6x6' },
-          { level: 8, size: 9, diff: 'easy', name: 'כניסה ל-9x9' },
-          { level: 9, size: 9, diff: 'easy', name: 'קלאסי קל' },
-          { level: 10, size: 9, diff: 'medium', name: 'בוס עולם 1 🏆' }
+          { level: 7, size: 6, diff: 'medium', name: 'אתגר 6x6' },
+          { level: 8, size: 9, diff: 'hard', name: 'מבחן כוח (9x9 קשה)' },
+          { level: 9, size: 9, diff: 'hard', name: 'לפני הבוס (9x9 קשה)' },
+          { level: 10, size: 9, diff: 'hard', name: 'בוס עולם 1 🏆' }
         ]
       },
       {
@@ -529,8 +532,8 @@
           { level: 23, size: 9, diff: 'medium', hasDiagonals: true, name: 'אלכסון כפול' },
           { level: 24, size: 9, diff: 'medium', hasDiagonals: true, name: 'איזון אלכסוני' },
           { level: 25, size: 9, diff: 'medium', hasDiagonals: true, name: 'סערת X' },
-          { level: 26, size: 9, diff: 'hard', hasDiagonals: true, name: 'אלכסון קשה' },
-          { level: 27, size: 9, diff: 'hard', hasDiagonals: true, name: 'X-Master' },
+          { level: 26, size: 9, diff: 'medium', hasDiagonals: true, name: 'חצי גמר' },
+          { level: 27, size: 9, diff: 'medium', hasDiagonals: true, name: 'X-Pro' },
           { level: 28, size: 9, diff: 'hard', hasDiagonals: true, name: 'הצלבה מוחלטת' },
           { level: 29, size: 9, diff: 'hard', hasDiagonals: true, name: 'כמעט בפסגה' },
           { level: 30, size: 9, diff: 'hard', hasDiagonals: true, name: 'בוס האלכסונים 🏆' }
@@ -548,7 +551,7 @@
           { level: 34, size: 9, diff: 'easy', isParity: true, name: 'סימנים כחולים וכתומים' },
           { level: 35, size: 9, diff: 'medium', isParity: true, name: 'לוגיקת זוגיות' },
           { level: 36, size: 9, diff: 'medium', isParity: true, name: 'אתגר הצבעים' },
-          { level: 37, size: 9, diff: 'hard', isParity: true, name: 'זוגיות מתקדמת' },
+          { level: 37, size: 9, diff: 'medium', isParity: true, name: 'זוגיות מתקדמת' },
           { level: 38, size: 9, diff: 'hard', isParity: true, name: 'מאסטר זוגי/אי-זוגי' },
           { level: 39, size: 9, diff: 'hard', isParity: true, name: 'סערת מספרים' },
           { level: 40, size: 9, diff: 'hard', isParity: true, name: 'בוס הזוגיות 🏆' }
@@ -563,10 +566,10 @@
           { level: 41, size: 9, diff: 'easy', isTimeAttack: true, timeLimitSeconds: 240, name: 'מרוץ 4 דקות' },
           { level: 42, size: 9, diff: 'easy', isSurvival: true, maxErrors: 2, name: 'זהירות משגיאות' },
           { level: 43, size: 9, diff: 'medium', isTimeAttack: true, timeLimitSeconds: 300, name: 'טיימר 5 דקות' },
-          { level: 44, size: 9, diff: 'medium', isSurvival: true, maxErrors: 1, name: 'הישרדות קשה' },
+          { level: 44, size: 9, diff: 'medium', isSurvival: true, maxErrors: 1, name: 'הישרדות בינונית' },
           { level: 45, size: 9, diff: 'medium', isTimeAttack: true, timeLimitSeconds: 270, name: 'מהירות ודיוק' },
-          { level: 46, size: 9, diff: 'hard', isSurvival: true, maxErrors: 1, name: 'פסילה אחת!' },
-          { level: 47, size: 9, diff: 'hard', isTimeAttack: true, timeLimitSeconds: 360, name: 'מרוץ קשה' },
+          { level: 46, size: 9, diff: 'medium', isSurvival: true, maxErrors: 1, name: 'פסילה אחת!' },
+          { level: 47, size: 9, diff: 'medium', isTimeAttack: true, timeLimitSeconds: 360, name: 'מרוץ מתקדם' },
           { level: 48, size: 9, diff: 'hard', isSurvival: true, maxErrors: 1, name: 'על חבל דק' },
           { level: 49, size: 9, diff: 'hard', isTimeAttack: true, isSurvival: true, timeLimitSeconds: 300, maxErrors: 1, name: 'מלחמה כפולה' },
           { level: 50, size: 12, diff: 'hard', isTimeAttack: true, timeLimitSeconds: 600, name: 'הבוס הסופי 👑' }
@@ -589,6 +592,20 @@
       return total;
     }
 
+    // נעילת עולם: פתיחת עולם N מצריכה לפחות 24 כוכבים (מתוך 30) בעולם N-1
+    function isWorldUnlocked(worldNum) {
+      if (worldNum === 1) return true;
+      const prevWorld = JOURNEY_WORLDS[worldNum - 2];
+      const progress = getJourneyProgress();
+      let prevWorldStars = 0;
+      prevWorld.levels.forEach(l => {
+        if (progress[l.level] && progress[l.level].stars) {
+          prevWorldStars += progress[l.level].stars;
+        }
+      });
+      return prevWorldStars >= 24;
+    }
+
     function saveJourneyLevelResult(levelNum, stars, bestTime) {
       const progress = getJourneyProgress();
       if (!progress[levelNum] || stars > progress[levelNum].stars || (stars === progress[levelNum].stars && bestTime < progress[levelNum].bestTime)) {
@@ -597,14 +614,10 @@
       }
     }
 
-    function calculateJourneyStars(seconds, hintsUsed, errorsMade) {
-      if (hintsUsed === 0 && errorsMade === 0 && seconds <= 360) {
-        return 3;
-      } else if (hintsUsed <= 1 && errorsMade <= 1) {
-        return 2;
-      } else {
-        return 1;
-      }
+    // נוסחת חישוב כוכבים: 3 פחות (רמזים + שגיאות + בדיקות)
+    function calculateJourneyStars(hintsUsed, errorsMade, checksUsed) {
+      let stars = 3 - hintsUsed - errorsMade - checksUsed;
+      return Math.max(0, stars);
     }
 
     // --- מחולל מספרים אקראיים מבוסס Seed יומי ---
@@ -768,6 +781,7 @@
       secondsElapsed = 0;
       dailyHintsUsed = 0;
       dailyErrorsMade = 0;
+      dailyChecksUsed = 0;
       isCompetitiveMode = false;
       isDailyMode = false;
       isJourneyMode = false;
@@ -789,6 +803,7 @@
       secondsElapsed = 0;
       dailyHintsUsed = 0;
       dailyErrorsMade = 0;
+      dailyChecksUsed = 0;
       isCompetitiveMode = false;
       isDailyMode = false;
       isJourneyMode = false;
@@ -810,6 +825,7 @@
       secondsElapsed = 0;
       dailyHintsUsed = 0;
       dailyErrorsMade = 0;
+      dailyChecksUsed = 0;
       isCompetitiveMode = false;
       isDailyMode = false;
       isJourneyMode = false;
@@ -835,12 +851,16 @@
       const worldData = JOURNEY_WORLDS[worldIdx];
       if (!worldData) return;
 
+      const worldUnlocked = isWorldUnlocked(worldData.world);
+
       document.getElementById('world-tag').innerText = `עולם ${worldData.world}`;
       document.getElementById('world-title').innerText = worldData.title;
-      document.getElementById('world-subtitle').innerText = worldData.subtitle;
+      document.getElementById('world-subtitle').innerText = worldUnlocked ? 
+        worldData.subtitle : 
+        `🔒 נעול! נדרשים לפחות 24 כוכבים בעולם ${worldData.world - 1} למעבר`;
 
       const headerCard = document.getElementById('world-header-card');
-      headerCard.className = `w-full bg-gradient-to-r ${worldData.bgGradient} text-white p-3.5 rounded-2xl shadow-md flex items-center justify-between transition-all`;
+      headerCard.className = `w-full bg-gradient-to-r ${worldData.bgGradient} text-white p-3.5 rounded-2xl shadow-md flex items-center justify-between transition-all ${!worldUnlocked ? 'opacity-70' : ''}`;
 
       const progress = getJourneyProgress();
       const totalStars = getTotalJourneyStars();
@@ -856,7 +876,15 @@
 
       // רינדור השלבים מלמטה למעלה (שלב 1 למטה, שלב 10 למעלה)
       worldData.levels.forEach((lvl, index) => {
-        const isUnlocked = lvl.level === 1 || (progress[lvl.level - 1] && progress[lvl.level - 1].stars > 0);
+        let isUnlocked = false;
+        if (worldUnlocked) {
+          if (lvl.level === 1 || lvl.level % 10 === 1) {
+            isUnlocked = true;
+          } else {
+            isUnlocked = progress[lvl.level - 1] && progress[lvl.level - 1].stars > 0;
+          }
+        }
+
         const lvlProgress = progress[lvl.level] || { stars: 0, bestTime: null };
         
         // זיגזג שמאלה וימינה סביב גזע העץ
@@ -942,6 +970,7 @@
       secondsElapsed = 0;
       dailyHintsUsed = 0;
       dailyErrorsMade = 0;
+      dailyChecksUsed = 0;
 
       createNewGame(levelSeed);
       switchToGame();
@@ -1053,6 +1082,7 @@
       secondsElapsed = 0;
       dailyHintsUsed = 0;
       dailyErrorsMade = 0;
+      dailyChecksUsed = 0;
 
       document.getElementById('game-title-display').innerText = "סודוקו קלאסי";
       document.getElementById('difficulty-selector-bar').classList.remove('hidden');
@@ -1072,6 +1102,7 @@
       secondsElapsed = 0;
       dailyHintsUsed = 0;
       dailyErrorsMade = 0;
+      dailyChecksUsed = 0;
 
       document.getElementById('game-title-display').innerText = `מצב תחרותי (${getDifficultyName(diff)}) ⚡`;
       document.getElementById('difficulty-selector-bar').classList.add('hidden');
@@ -1132,6 +1163,7 @@
       } else {
         dailyHintsUsed = 0;
         dailyErrorsMade = 0;
+        dailyChecksUsed = 0;
         secondsElapsed = 0;
         const challengeSeed = getDailySeed() + DAILY_CHALLENGES_CATALOG.findIndex(c => c.id === config.id);
         createNewGame(challengeSeed);
@@ -1150,6 +1182,7 @@
       const hintBtn = document.getElementById('action-btn-hint');
       const hintText = document.getElementById('hint-btn-text');
       const checkBtn = document.getElementById('action-btn-check');
+      const checkText = document.getElementById('check-btn-text');
       const newBtn = document.getElementById('action-btn-new');
       const pencilBtn = document.getElementById('action-btn-pencil');
 
@@ -1202,20 +1235,31 @@
       } else if (isJourneyMode) {
         banner.classList.remove('hidden');
         banner.classList.add('flex');
-        bannerText.innerText = `מסע השלבים - שלב ${currentJourneyLevel}`;
+        
+        const remHints = Math.max(0, 2 - dailyHintsUsed);
+        const remChecks = Math.max(0, 2 - dailyChecksUsed);
+        bannerText.innerText = `מסע השלבים - שלב ${currentJourneyLevel} • רמזים נותרים: ${remHints} • בדיקות נותרות: ${remChecks}`;
 
         diffBar.classList.add('hidden');
         sizeBar.classList.add('hidden');
 
         pauseBtn.classList.remove('opacity-40', 'pointer-events-none');
-        hintBtn.classList.remove('opacity-40', 'pointer-events-none');
-        checkBtn.classList.remove('opacity-40', 'pointer-events-none');
         newBtn.classList.remove('opacity-40', 'pointer-events-none');
         pencilBtn.classList.remove('opacity-40', 'pointer-events-none');
+
+        hintText.innerText = `רמז (${remHints}/2)`;
+        if (remHints <= 0) hintBtn.classList.add('opacity-40', 'pointer-events-none');
+        else hintBtn.classList.remove('opacity-40', 'pointer-events-none');
+
+        checkText.innerText = `בדיקה (${remChecks}/2)`;
+        if (remChecks <= 0) checkBtn.classList.add('opacity-40', 'pointer-events-none');
+        else checkBtn.classList.remove('opacity-40', 'pointer-events-none');
+
       } else {
         banner.classList.add('hidden');
         banner.classList.remove('flex');
         hintText.innerText = "רמז";
+        checkText.innerText = "בדיקה";
 
         pauseBtn.classList.remove('opacity-40', 'pointer-events-none');
         hintBtn.classList.remove('opacity-40', 'pointer-events-none');
@@ -1578,6 +1622,7 @@
         currentJourneyLevel,
         dailyHintsUsed,
         dailyErrorsMade,
+        dailyChecksUsed,
         dailyConfigId: currentDailyConfig ? currentDailyConfig.id : null
       };
 
@@ -1610,6 +1655,7 @@
         currentJourneyLevel = state.currentJourneyLevel || 1;
         dailyHintsUsed = state.dailyHintsUsed || 0;
         dailyErrorsMade = state.dailyErrorsMade || 0;
+        dailyChecksUsed = state.dailyChecksUsed || 0;
 
         if (state.dailyConfigId) {
           const foundConfig = DAILY_CHALLENGES_CATALOG.find(c => c.id === state.dailyConfigId);
@@ -1738,10 +1784,8 @@
 
       if (isParityChallenge) {
         if ((row + col) % 3 === 0) {
-          // משבצת כחולה: מספרים זוגיים בלבד
           if (num % 2 !== 0) return false;
         } else if ((row + col) % 3 === 1) {
-          // משבצת כתום: מספרים אי-זוגיים בלבד
           if (num % 2 === 0) return false;
         }
       }
@@ -1983,6 +2027,11 @@
         return;
       }
 
+      if (isJourneyMode && dailyHintsUsed >= 2) {
+        alert('הגעת למכסת הרמזים המרבית לשלב זה (עד 2 רמזים)!');
+        return;
+      }
+
       const candidates = [];
       for (let r = 0; r < currentSize; r++) {
         for (let c = 0; c < currentSize; c++) {
@@ -2008,6 +2057,7 @@
       hintCell = { row: r, col: c };
       if (hintTimeout) clearTimeout(hintTimeout);
 
+      updateCompetitiveUI();
       renderUI();
       saveGameState();
 
@@ -2183,19 +2233,20 @@
     function handleWin() {
       stopTimer();
       clearSavedGame();
-      playFanfareSound();
       
       const isNewRecord = checkAndUpdateBestTime(currentDifficulty, secondsElapsed);
       const recordBadge = document.getElementById('new-record-badge');
       const dailyBreakdown = document.getElementById('daily-score-breakdown');
       const journeyDisplay = document.getElementById('journey-stars-win-display');
 
-      document.getElementById('win-modal-icon').innerText = '🏆';
-      document.getElementById('win-modal-title').innerText = 'כל הכבוד!';
-      document.getElementById('win-modal-desc').innerHTML = `פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">${document.getElementById('timer-display').innerText}</span>!`;
-      
       if (isJourneyMode) {
-        const starsEarned = calculateJourneyStars(secondsElapsed, dailyHintsUsed, dailyErrorsMade);
+        const starsEarned = calculateJourneyStars(dailyHintsUsed, dailyErrorsMade, dailyChecksUsed);
+        
+        if (starsEarned <= 0) {
+          handleLoss('zero_stars');
+          return;
+        }
+
         saveJourneyLevelResult(currentJourneyLevel, starsEarned, secondsElapsed);
 
         let starsText = '';
@@ -2241,6 +2292,11 @@
         dailyBreakdown.classList.remove('flex');
       }
 
+      playFanfareSound();
+      document.getElementById('win-modal-icon').innerText = '🏆';
+      document.getElementById('win-modal-title').innerText = 'כל הכבוד!';
+      document.getElementById('win-modal-desc').innerHTML = `פתרת את הסודוקו בהצלחה תוך <br><span id="win-time" class="font-bold text-indigo-600 font-mono text-base">${document.getElementById('timer-display').innerText}</span>!`;
+
       if (isNewRecord && !isDailyMode && !isJourneyMode) {
         recordBadge.classList.remove('hidden');
       } else {
@@ -2281,6 +2337,10 @@
         modalIcon.innerText = '💀';
         modalTitle.innerText = 'המשחק הסתיים';
         modalDesc.innerHTML = `הגעת למכסת הפסילות המרבית (${maxErrors}/${maxErrors}).<br><span class="font-bold text-indigo-600">כל הכבוד על המאמץ!</span>`;
+      } else if (reason === 'zero_stars') {
+        modalIcon.innerText = '⭐';
+        modalTitle.innerText = '0 כוכבים - השלב נכשל';
+        modalDesc.innerHTML = `השתמשת ביותר מדי רמזים, בדיקות או שגיאות.<br><span class="font-bold text-indigo-600">נדרש לפחות כוכב 1 כדי לעבור את השלב!</span>`;
       }
 
       if (isDailyMode) {
@@ -2527,8 +2587,11 @@
         pencilNotes[row][col].clear();
         autoCleanPencilNotes(row, col, num);
 
-        if (isDailyMode && currentDailyConfig && currentDailyConfig.isSurvival && solution.length) {
-          if (num !== solution[row][col]) {
+        if (num !== solution[row][col]) {
+          if (isJourneyMode) {
+            dailyErrorsMade++;
+            triggerErrorAnimation(row, col);
+          } else if (isDailyMode && currentDailyConfig && currentDailyConfig.isSurvival) {
             dailyErrorsMade++;
             triggerErrorAnimation(row, col);
 
@@ -2572,7 +2635,15 @@
 
     function checkErrors() {
       if (isPaused || isCompetitiveMode || isDailyMode) return;
+      
+      if (isJourneyMode && dailyChecksUsed >= 2) {
+        alert('הגעת למכסת הבדיקות המרבית לשלב זה (עד 2 בדיקות)!');
+        return;
+      }
+
       playClickSound();
+      if (isJourneyMode) dailyChecksUsed++;
+
       errorCells = [];
       for (let r = 0; r < currentSize; r++) {
         for (let c = 0; c < currentSize; c++) {
@@ -2584,6 +2655,7 @@
         }
       }
       selectedCell = null;
+      updateCompetitiveUI();
       renderUI();
     }
 
