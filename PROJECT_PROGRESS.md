@@ -1,75 +1,77 @@
-# 🧩 Project: Sudoku Fun - Progress & Memory File
+Project Overview
+Sudoku Fun (סודוקו כיף) is a responsive mobile-first web application built as a single-file solution using HTML5, Tailwind CSS, JavaScript (ES6+), Web Audio API, and HTML5 LocalStorage. The application features multiple grid sizes, distinct game modes, seeded daily challenges, and persistent state management.
 
----
+Core Architecture & Technical Stack
+Frontend: HTML5, Tailwind CSS (with custom Neumorphic shadow utilities), Vanilla ES6 JavaScript, canvas-confetti integration.
 
-## 🎯 Product Goal
-A mobile-first, responsive Sudoku web application built at $0 cost. Features a playful Neumorphic 3D design, scalable multi-board gameplay, engaging gamification, and balanced UX, aimed at creating a revenue-generating digital asset via ad monetization.
+Audio System: Custom Web Audio API synthesizer for native mobile touch feedback and sound effects (click, error, fanfare) without external audio asset dependencies.
 
----
+State Management: LocalStorage engine handling active game persistence, best times, streak counts, stars collection, and daily challenge progression.
 
-## 🛠️ Tech Stack ($0 Cost)
-* **Frontend & Styling:** HTML5 + Tailwind CSS (Neumorphic 3D styling, mobile-first SPA navigation)
-* **Logic & Audio:** Vanilla JavaScript (Dynamic multi-size board generator, Uniqueness & Spatial Balance Engine, Multi-dimensional Human-Solver, Web Audio API with Mobile Audio Unlocker)
-* **Visual Effects:** Canvas Confetti library (Victory celebration)
-* **Hosting:** Vercel (Auto-deploys from GitHub `main` branch)
-* **Persistence:** LocalStorage (State auto-save, personal best records, daily cumulative scores, streak tracking, developer mode)
+Deployment & Version Control: GitHub repository hosted and deployed via Vercel.
 
----
+Game Modes & Features
+1. Classic Sudoku Mode
+Grid Support: 4x4, 6x6, 9x9, 12x12.
 
-## ✅ Completed Features (MVP v8)
+Difficulties: Easy, Medium, Hard.
 
-### 1. Game Hub & SPA Navigation
-* **Central Home View:** Displays active User Streak (🔥) and total Stars (⭐).
-* **2x2 Mode Selection Cards:** Classic, Competitive Mode, Daily Challenge, and Journey Mode.
-* **Full Leaderboard Hub (🏆):** Multi-tab Leaderboard View covering Personal Bests, Daily Challenge (Today & Cumulative 🔥), Competitive 9x9 (Easy, Medium, Hard), and Global Star Collectors.
-* **Competitive Mode Engine (⚡):** 9x9 board with disabled hints, error checks, and pause controls. Includes state reset bug fixes when switching between Classic and Competitive modes to prevent timer freeze.
+Tools: Pencil notes (with auto-clean logic on number placement), error inspector, hint engine, game pause/resume, personal best records per grid size/difficulty.
 
-### 2. Perfect Board Generation Engine (`generateSudoku`)
-* **Guaranteed Unique Solution (`countSolutions`):** Every clue removal is validated in real time. If removing a digit results in multiple valid solutions ($>1$), the removal is rejected, ensuring strictly **100% single-solution puzzles**.
-* **Spatial Balance Engine (`isBalanced`):** Eliminates empty "dead zones" (e.g., empty 3x3 sub-boxes or blank top rows). Enforces a minimum clue threshold across every row, column, and $boxRows \times boxCols$ sub-box (e.g., minimum 2 clues per 3x3 box for 9x9).
-* **Human-Solver Logical Difficulty Grading (`evaluateLogicalDifficulty`):**
-  * **Easy:** $100\%$ solvable strictly using Naked & Hidden Singles (no candidate notes required).
-  * **Medium & Hard:** Controlled clue reduction that requires deeper logical techniques (pointing pairs, naked pairs, candidate reduction) rather than pure sight-solving.
+2. Competitive Mode
+Grid: 9x9 only.
 
-### 3. Daily Challenge Cumulative Scoring System
-* **Scope Definition:** Classic and Competitive modes strictly measure **Time Speed**. The Daily Challenge incorporates a dedicated **Cumulative Points Engine**:
-* **Scoring Formula (`calculateDailyScore`):**
-  $$\text{Daily Score} = \text{BasePoints}(100) + \text{SpeedBonus}(10\dots50) + \text{StreakBonus}(10 \times \text{Days}) + \text{MilestoneBonus}(100 \text{ on Day } 7, 14, 21\dots)$$
-  * **Base Completion:** 100 points guaranteed upon completion.
-  * **Speed Bonus:** Up to +50 points (decays by 1 point per 10 seconds; protected floor of 10 points).
-  * **Daily Streak Bonus:** $+10$ fixed points for every active streak day (🔥).
-  * **Weekly Milestone Bonus:** $+100$ bonus points every 7 consecutive days (Days 7, 14, 21, 28, etc.).
-* **Victory Modal Breakdown:** Modal displays a transparent breakdown (Base + Speed + Streak + Milestone = Total) upon solving the Daily Challenge.
+Rules: Strict competition rules — hints, error checking, pause menu, and puzzle regeneration are completely disabled.
 
-### 4. Dynamic Multi-Board Support (4x4, 6x6, 9x9, 12x12)
-* **Multiple Board Dimensions:** Fully supports **4x4** (2x2 boxes), **6x6** (2x3 boxes), **9x9** (3x3 boxes – **Default**), and **12x12** (3x4 boxes).
-* **Adaptive Board Grid:** Dynamic CSS grid layout (`gridTemplateColumns`) with adaptive thick inner box borders (`border-b-thick`, `border-l-thick`) and responsive font size scaling (`text-xs` to `text-2xl`).
-* **Balanced Clue Targets:**
-  * **4x4:** Easy ~10 | Medium ~7 | Hard ~5
-  * **6x6:** Easy ~22 | Medium ~16 | Hard ~12
-  * **9x9:** Easy ~44–46 | Medium ~34–36 | Hard ~28–30
-  * **12x12:** Easy ~88 | Medium ~68 | Hard ~52
+Leaderboards: Separate leaderboards for Easy, Medium, and Hard tiers.
 
-### 5. Smart Adaptive Keyboard & Inputs
-* **Dynamic Digit Keys:** Automatically renders $N$ keys ($1..N$) matching the active board size $N$, alongside a **Total Counter Tile** showing overall remaining empty cells.
-* **Completion Badges:** Displays remaining counts per digit, turning green with a `✓` checkmark upon completing all instances of a number.
-* **Smart Candidate Notes (✏️):** Dynamic candidate grid inside empty cells ($2\times2$ up to $4\times3$). Placing a final digit automatically cleans that candidate from peer row, column, and sub-box notes.
+3. Daily Challenge Engine (Seeded System)
+Rotation Catalog:
 
-### 6. Hint System (💡), Dev Mode (⚡) & Audio
-* **Visual Hint System:** Highlights the hint cell with a glowing amber 3-second animated pulse (`animate-pulse`, `bg-amber-300`, `ring-amber-500`) while placing the correct digit and cleaning notes.
-* **Dev Mode / Auto-Solve (⚡):** Activated via URL parameter (`?dev=true`) and saved in `LocalStorage` (`sudoku_dev_mode`). Renders a hidden "Auto-Solve" button for rapid debugging.
-* **Mobile Audio Unlocker (`unlockAudio`):** Bypasses iOS/Android Web Audio API autoplay restrictions with synthetic tone synthesis (click & victory fanfare).
+X-Sudoku 9x9 (❎): Requires numbers 1-9 to be unique across primary diagonals.
 
-### 7. Persistence & State Management
-* **Active Game Auto-Save (`sudoku_active_game`):** Preserves current size, difficulty, board matrix, notes, timer, and pause state across page reloads.
-* **Size-Specific Best Times (`sudoku_best_times`):** Stores records formatted as `${size}_${difficulty}` (e.g., `9_easy`).
-* **Cumulative Scores (`sudoku_daily_cumulative_score`):** Tracks accumulated daily points for global leaderboard rendering.
+Countdown 9x9 (⏱️): Time-attack countdown timer (Easy: 4:30, Medium: 6:00, Hard: 8:00).
 
----
+Memory Training 9x9 (🧠): Pencil notes mode disabled; difficulty strictly locked to Hard.
 
-## 📋 Next Roadmap Items
-* ⬜ **Journey / Level Mode:** Develop interactive map UI with star milestones, custom level rules, and unlock progression.
-* ⬜ **Daily Challenge Calendar UI:** Build calendar grid UI with date-seeded puzzle logic and streak repair features.
-* ⬜ **PWA Integration:** Add Web App Manifest & Service Worker for "Add to Home Screen" support and offline functionality.
-* ⬜ **User Auth & Backend:** Integrate Supabase/Firebase for cross-device state sync and real-time global leaderboards.
-* ⬜ **Monetization:** Integrate Google AdSense / Ezoic rewarded & interstitial ad units.
+Titan 12x12 (🐘): Extended 12x12 grid awarding double star rewards.
+
+Survival 9x9 (💀): Zero hints with mistake limits (Easy: 1, Medium: 2, Hard: 3).
+
+Scoring Mechanics: Dynamic formula calculating base difficulty score, speed/time bonus, penalties for hints/errors, active daily streak multiplier, and weekly 7-day milestone bonuses.
+
+4. Journey & Leaderboard Hub
+Journey Mode: Map-based level progression tracking cumulative star collection.
+
+Leaderboard Tabs: Personal Bests (filterable by grid size), Daily Challenge Standings (Today vs. Cumulative Streak), Competitive Standings, and Global Collector Ranks.
+
+Recent Updates & Key Logic Fixes
+1. Persistent Daily Challenge State (Anti-Exploit Architecture)
+Problem Addressed: Navigating to the Home screen during an active Daily Challenge previously wiped current elapsed time, hint counts, and error penalties, allowing players to restart with a clean slate.
+
+Solution Implemented:
+
+Implemented date-seeded local persistence using unique keys (sudoku_daily_saved_{seed}_{challengeId}).
+
+Complete session preservation: secondsElapsed, dailyHintsUsed, dailyErrorsMade, board numbers, and pencil note sets are serialized on every tick/action.
+
+Returning to the Home screen and re-entering the Daily Challenge seamlessly resumes the exact timer and mistake state.
+
+State automatically resets only when the daily date seed updates or when the challenge ends in an explicit win/loss state.
+
+2. Memory Training Difficulty Enforcement
+Problem Addressed: "Memory Training" mode occasionally generated easy-tier boards.
+
+Solution Implemented: Enforced a hard lock (currentDifficulty = 'hard') specifically for the no_pencil_9x9 challenge catalog entry to guarantee consistent difficulty scaling.
+
+3. Timer & Cross-Mode Isolation
+Problem Addressed: State bleeding between game modes when navigating back to the main menu.
+
+Solution Implemented: Explicitly reset and isolated state flags (isCompetitiveMode, isDailyMode, timer intervals) upon menu navigation.
+
+Future Roadmap
+Journey Mode Expansion: Full map rendering with unlockable level stages and star milestones.
+
+PWA Capabilities: Add service worker support for offline functionality and home screen installation.
+
+Global Leaderboard Sync: Connect to a backend service for real-time multiplayer score tracking.
